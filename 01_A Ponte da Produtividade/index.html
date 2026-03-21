@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Syngenta - Máximo de Produtividade</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{overflow:hidden;background:#000;font-family:'DM Sans','Segoe UI',sans-serif;touch-action:none}
+canvas{display:block;filter:saturate(1.5)}
+#ui{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:10}
+
+/* ── HUD ── */
+#hud-wrap{position:absolute;top:10px;left:0;right:0;display:flex;flex-direction:column;align-items:center;gap:6px;transition:opacity 0.3s}
+#hud-wrap.hidden-hud{opacity:0;pointer-events:none}
+#hud-row{display:flex;align-items:center;gap:6px;width:100%;padding:0 12px}
+.pill{display:flex;align-items:center;gap:5px;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:5px 14px;white-space:nowrap;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+.pill-label{font-size:8px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0;font-family:'DM Sans',sans-serif}
+.pill-val{font-size:15px;font-weight:800;font-family:'Syne',sans-serif;line-height:1;color:#fff}
+.pill-val.pos{color:#7dde9c}
+.pill-val.neg{color:#f08080}
+#pill-name{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:#7dde9c}
+#pill-progress{flex:1;display:flex;align-items:center;gap:6px;min-width:0}
+#field-progress{flex:1;height:3px;background:rgba(255,255,255,0.1);border-radius:2px;overflow:hidden;min-width:20px}
+#field-progress-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,#f47c7c,#ffd966 60%,#7dde9c);transition:width 0.3s}
+.pill-tag{font-size:9px;color:rgba(255,255,255,0.4);font-family:'DM Sans',sans-serif}
+.pill-tag span{color:rgba(255,255,255,0.75);font-weight:600;font-family:'Syne',sans-serif}
+#hud-pips{display:flex;align-items:center;gap:3px}
+.pip{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.15)}
+.pip.on{background:#ffd966}
+#sync-dot{width:7px;height:7px;border-radius:50%}
+#sync-dot.online{background:#7dde9c}
+#sync-dot.offline{background:#f08080}
+#sync-dot.pending{background:#ffd966}
+#hud-stakes-row{display:flex;justify-content:center}
+#stakes-pill{display:flex;align-items:center;gap:6px;background:rgba(93,64,55,0.7);border:1.5px solid rgba(141,110,99,0.5);border-radius:20px;padding:6px 20px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+#stakes-pill .pill-val{color:#ffd966;font-size:20px}
+
+#combo-text{position:absolute;top:35%;left:50%;transform:translate(-50%,-50%);font-family:'Syne',sans-serif;font-size:52px;font-weight:900;text-shadow:0 4px 20px rgba(0,0,0,0.6);opacity:0;pointer-events:none;transition:opacity 0.4s,transform 0.4s}
+#controls-hint{position:absolute;bottom:60px;left:50%;transform:translateX(-50%);display:flex;gap:50px;opacity:0.8;transition:opacity 1s}
+.hint-arrow{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.35);display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px;font-weight:900}
+#touch-left,#touch-right{position:absolute;top:0;width:50%;height:100%;pointer-events:none;cursor:pointer}
+#touch-left{left:0}
+#touch-right{right:0}
+@font-face{font-family:'FuturaCond';src:url('assets/Futura Condensed Extra Bold.otf') format('opentype');font-weight:800}
+.overlay{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:all;z-index:100}
+#start-screen{background:url('assets/BG.jpg') center/cover no-repeat;justify-content:flex-start;padding-top:0}
+#start-step1,#start-step2{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity 0.4s}
+#start-step1{justify-content:flex-start;padding-top:22vh}
+#start-step2{opacity:0;pointer-events:none}
+#start-step2.active{opacity:1;pointer-events:all}
+#start-step1.hide{opacity:0;pointer-events:none}
+.start-logo{position:absolute;top:16px;left:20px;height:28px;opacity:0.9;filter:brightness(0) invert(1)}
+.start-config{position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:rgba(255,255,255,0.3)}
+.start-title{width:min(820px,95vw);margin-bottom:40px;filter:drop-shadow(0 8px 25px rgba(0,0,0,0.4))}
+.btn-start{font-family:'FuturaCond',sans-serif;font-size:28px;letter-spacing:0;text-transform:uppercase;color:#0d30e1;background:linear-gradient(180deg,#f0f5c4 0%,#e6eeaa 100%);border:none;padding:18px 80px;border-radius:40px;cursor:pointer;box-shadow:0 6px 0 #a8d830,0 8px 20px rgba(0,0,0,0.3);transition:transform 0.12s,box-shadow 0.12s}
+.btn-start:hover{transform:translateY(-2px);box-shadow:0 8px 0 #a8d830,0 10px 25px rgba(0,0,0,0.3)}
+.btn-start:active{transform:translateY(4px);box-shadow:0 2px 0 #a8d830,0 4px 10px rgba(0,0,0,0.3)}
+.btn-mode{font-family:'FuturaCond',sans-serif;font-size:22px;letter-spacing:0;text-transform:uppercase;padding:16px 50px;border-radius:40px;cursor:pointer;border:none;transition:transform 0.12s,box-shadow 0.12s,background 0.2s;color:#0d30e1;background:linear-gradient(180deg,#f0f5c4 0%,#e6eeaa 100%);box-shadow:0 6px 0 #a8d830,0 8px 20px rgba(0,0,0,0.3)}
+.btn-mode:hover{transform:translateY(-2px);box-shadow:0 8px 0 #a8d830,0 10px 25px rgba(0,0,0,0.3)}
+.btn-mode:active,.btn-mode.selected{transform:translateY(2px);background:linear-gradient(180deg,#3b6ef5 0%,#2a5cd4 100%);color:#fff;box-shadow:0 3px 0 #a8d830,0 5px 15px rgba(0,0,0,0.3)}
+.step2-board{background:#e4dec7;border-radius:16px;padding:44px 50px 40px;max-width:640px;width:88%;position:relative;box-shadow:4px 6px 0 rgba(0,0,0,0.15);transform:rotate(-1deg);display:flex;flex-direction:column;align-items:center;gap:36px}
+.step2-board::before{content:'';position:absolute;inset:-4px;border-radius:18px;background:rgba(180,200,220,0.35);z-index:-1;transform:rotate(1.5deg)}
+.step2-instructions{color:#0d30e1;font-family:'FuturaCond',sans-serif;font-size:20px;text-align:center;line-height:130%;letter-spacing:0}
+.step2-modes{display:flex;gap:14px}
+.step2-board .settings{margin-bottom:0}
+.step2-board .setting-input{background:rgba(0,0,0,0.08);border-color:rgba(0,0,0,0.15);color:#333}
+.step2-board .setting-input::placeholder{color:rgba(0,0,0,0.35)}
+.step2-board .setting-input:focus{border-color:#0d30e1}
+.step2-board #form-error{color:#c62828}
+.btn-back{position:absolute;top:16px;left:20px;background:none;border:none;color:rgba(255,255,255,0.6);font-family:'FuturaCond',sans-serif;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:20px;transition:all 0.2s;letter-spacing:0}
+.btn-back:hover{color:#fff;background:rgba(255,255,255,0.1)}
+#game-over{background:rgba(0,0,0,0.75)}
+#win-screen{background:rgba(27,94,32,0.88)}
+.screen-title{color:#fff;font-family:'FuturaCond',sans-serif;font-size:38px;font-weight:800;margin-bottom:8px;text-shadow:0 4px 25px rgba(0,0,0,0.35);text-align:center;line-height:1.15;letter-spacing:0}
+.screen-sub{color:rgba(255,255,255,0.85);font-size:17px;margin-bottom:30px;text-align:center;max-width:330px;line-height:1.45}
+.btn{background:linear-gradient(180deg,#f0f5c4 0%,#e6eeaa 100%);color:#0d30e1;border:none;padding:16px 50px;font-family:'FuturaCond',sans-serif;font-size:22px;font-weight:800;border-radius:40px;cursor:pointer;box-shadow:0 6px 0 #a8d830,0 8px 20px rgba(0,0,0,0.3);transition:transform 0.12s,box-shadow 0.12s;letter-spacing:0;text-transform:uppercase}
+.btn:hover{transform:translateY(-2px);box-shadow:0 8px 0 #a8d830,0 10px 25px rgba(0,0,0,0.3)}
+.btn:active{transform:translateY(4px);box-shadow:0 2px 0 #a8d830,0 4px 10px rgba(0,0,0,0.3)}
+.big-score{color:#FFD700;font-size:56px;font-weight:900;margin:8px 0;font-family:'Syne',sans-serif}
+.hidden{display:none!important}
+.settings{width:100%;max-width:320px;margin-bottom:24px}
+.setting-row{margin-bottom:16px}
+.setting-label{color:rgba(255,255,255,0.9);font-size:14px;font-weight:700;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+.setting-val{color:#FFD700;font-size:14px;font-weight:800;min-width:60px;text-align:right}
+.setting-slider{-webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:4px;background:rgba(255,255,255,0.2);outline:none}
+.setting-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#FFB300,#F57C00);cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.3)}
+.setting-slider::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#FFB300,#F57C00);cursor:pointer;border:none}
+.setting-input{width:100%;padding:12px 16px;border:2px solid rgba(255,255,255,0.3);border-radius:12px;background:rgba(0,0,0,0.3);color:#fff;font-family:'FuturaCond',sans-serif;font-size:16px;font-weight:600;outline:none;transition:border-color 0.2s;letter-spacing:0}
+.setting-input::placeholder{color:rgba(255,255,255,0.45)}
+.setting-input:focus{border-color:#a8d830}
+.mode-btn{background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.7);border:2px solid rgba(255,255,255,0.2);padding:10px 24px;font-size:15px;font-weight:700;border-radius:25px;cursor:pointer;transition:all 0.2s}
+.mode-btn.active{background:rgba(255,255,255,0.2);color:#fff;border-color:#FFB300}
+.mode-btn:hover{background:rgba(255,255,255,0.15)}
+#player-turn-banner{position:absolute;top:100px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);color:#FFD700;padding:10px 30px;border-radius:15px;font-size:20px;font-weight:800;z-index:50;display:none;pointer-events:none}
+</style>
+</head>
+<body>
+
+<div id="ui">
+  <div id="hud-wrap">
+    <div id="hud-row">
+      <div class="pill" id="pill-name"></div>
+      <div class="pill"><div class="pill-label">Saldo</div><div class="pill-val pos" id="hud-saldo">0</div></div>
+      <div class="pill" id="pill-progress">
+        <div class="pill-tag">Soja</div>
+        <div id="field-progress"><div id="field-progress-fill" style="width:0%"></div></div>
+        <div class="pill-tag"><span id="hud-progress-text">V1</span></div>
+      </div>
+      <div class="pill"><div class="pill-label">Lavoura</div><div class="pill-val" id="hud-lavoura" style="color:#ffd966">100%</div></div>
+      <div class="pill"><div id="hud-pips"></div><div id="sync-dot" class="offline"></div></div>
+    </div>
+    <div id="hud-stakes-row">
+      <div id="stakes-pill"><div class="pill-label">Estacas</div><div class="pill-val" id="hud-stakes">0</div></div>
+    </div>
+  </div>
+  <div id="combo-text"></div>
+  <div id="controls-hint">
+    <div class="hint-arrow">&larr;</div>
+    <div class="hint-arrow">&rarr;</div>
+  </div>
+  <div id="touch-left"></div>
+  <div id="touch-right"></div>
+  <div id="player-turn-banner"></div>
+</div>
+
+<div id="start-screen" class="overlay">
+  <!-- Step 1: Title + START -->
+  <div id="start-step1">
+    <img src="assets/Logo_AcessaAgro.svg" class="start-logo" alt="Acessa Agro">
+    <img src="assets/TITLE_Game.svg" class="start-title" alt="A Ponte da Produtividade">
+    <button class="btn-start" id="btn-go-step2">START</button>
+    <div id="config-toggle" style="position:absolute;bottom:20px;right:20px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;color:rgba(255,255,255,0.4)">&#9881;</div>
+  </div>
+
+  <!-- Step 2: Instructions + Mode select -->
+  <div id="start-step2">
+    <button class="btn-back" id="btn-back-step1">&#8592; VOLTAR</button>
+    <img src="assets/Logo_AcessaAgro.svg" style="position:absolute;top:16px;right:20px;height:24px;opacity:0.9;filter:brightness(0) invert(1)" alt="Acessa Agro">
+    <img src="assets/TITLE_Game.svg" class="start-title" style="width:min(500px,70vw);margin-bottom:12px" alt="A Ponte da Produtividade">
+    <div class="step2-board">
+      <div class="step2-instructions">
+        PULE PARA A ESQUERDA OU DIREITA PARA ESCOLHER O PRODUTO CERTO.<br><br>
+        COLETE ESTACAS PARA CONSTRUIR A PONTE E CHEGUE ATÉ A MÁXIMA PRODUTIVIDADE DA LAVOURA!
+      </div>
+      <div class="step2-modes">
+        <button class="btn-mode" id="btn-1p">01 JOGADOR</button>
+        <button class="btn-mode" id="btn-2p">02 JOGADORES</button>
+      </div>
+
+      <!-- Form fields (shown after mode select) -->
+      <div class="settings hidden" id="player-form" style="width:100%;max-width:360px">
+        <div class="setting-row">
+          <input type="text" id="input-nome" class="setting-input" placeholder="Seu nome" required>
+        </div>
+        <div class="setting-row">
+          <input type="text" id="input-doc" class="setting-input" placeholder="CPF ou CNPJ" required>
+        </div>
+        <div id="p2-fields" class="hidden">
+          <div class="setting-row">
+            <input type="text" id="input-nome2" class="setting-input" placeholder="Nome do Jogador 2" required>
+          </div>
+          <div class="setting-row">
+            <input type="text" id="input-doc2" class="setting-input" placeholder="CPF ou CNPJ do Jogador 2" required>
+          </div>
+        </div>
+        <div id="form-error" style="font-size:13px;margin-bottom:10px;display:none;font-weight:600"></div>
+        <button class="btn" id="start-btn" style="width:100%">JOGAR</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Painel de configurações oculto -->
+<div id="config-panel" class="overlay hidden" style="background:rgba(0,0,0,0.9);z-index:200">
+  <div class="screen-title" style="font-size:24px;margin-bottom:20px">Configurações</div>
+  <div class="settings">
+    <div class="setting-row">
+      <div class="setting-label"><span>Velocidade</span><span class="setting-val" id="speed-label">Normal</span></div>
+      <input type="range" class="setting-slider" id="speed-slider" min="1" max="3" value="2" step="1">
+    </div>
+    <div class="setting-row">
+      <div class="setting-label"><span>Dificuldade</span><span class="setting-val" id="diff-label">Normal</span></div>
+      <input type="range" class="setting-slider" id="diff-slider" min="1" max="3" value="2" step="1">
+    </div>
+  </div>
+  <button class="btn" id="config-save" style="margin-top:10px">SALVAR</button>
+</div>
+
+<div id="game-over" class="overlay hidden">
+  <div class="screen-title">PONTE QUEBROU!</div>
+  <div id="final-score" class="big-score">0</div>
+  <div class="screen-sub">SynCoins conquistadas</div>
+  <button class="btn" id="restart-btn">TENTAR NOVAMENTE</button>
+</div>
+
+<div id="win-screen" class="overlay hidden">
+  <div class="screen-title">PARABÉNS!</div>
+  <div id="win-score" class="big-score">0</div>
+  <div class="screen-sub">Você chegou à lavoura com máxima produtividade!</div>
+  <button class="btn" id="win-btn">JOGAR NOVAMENTE</button>
+</div>
+
+<!-- Tela entre turnos (2 jogadores) -->
+<div id="turn-screen" class="overlay hidden" style="background:rgba(0,0,0,0.85)">
+  <div class="screen-title" id="turn-title">Vez do Jogador 2!</div>
+  <div class="screen-sub" id="turn-sub">Jogador 1 fez 0 SynCoins. Supere essa marca!</div>
+  <button class="btn" id="turn-btn">JOGAR</button>
+</div>
+
+<!-- Resultado final 2 jogadores -->
+<div id="result-screen" class="overlay hidden" style="background:linear-gradient(160deg,#1B5E20,#2E7D32)">
+  <div class="screen-title">RESULTADO FINAL</div>
+  <div id="result-content" style="margin:20px 0;text-align:center;color:#fff;font-size:18px;line-height:2"></div>
+  <div id="result-winner" class="big-score" style="font-size:28px"></div>
+  <button class="btn" id="result-btn" style="margin-top:20px">JOGAR NOVAMENTE</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/sync.js"></script>
+<script src="js/game.js"></script>
+<!-- Game logic is now in js/game.js -->
+<script>/* game code moved to js/game.js */
+</script>
+</body>
+</html>

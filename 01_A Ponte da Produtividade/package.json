@@ -1,0 +1,12 @@
+{
+  "name": "syngenta-crowd-runner",
+  "version": "1.0.0",
+  "description": "Syngenta Máximo de Produtividade - Bridge Runner Game",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
