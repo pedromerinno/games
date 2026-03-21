@@ -112,14 +112,12 @@ canvas{display:block;filter:saturate(1.5)}
 .btn-back{position:absolute;top:16px;left:20px;background:none;border:none;color:rgba(255,255,255,0.6);font-family:'FuturaCond',sans-serif;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:20px;transition:all 0.2s;letter-spacing:0}
 .btn-back:hover{color:#fff;background:rgba(255,255,255,0.1)}
 #game-over{
-  background:radial-gradient(ellipse at 50% 40%, rgba(180,20,20,0.6) 0%, rgba(0,0,0,0.92) 70%);
+  background:rgba(0,0,0,0.8);
 }
 #game-over .screen-icon{
-  font-size:72px;
-  margin-bottom:12px;
-  animation:pulse-icon 1.5s ease-in-out infinite;
+  width:64px;height:64px;
+  margin-bottom:16px;
 }
-@keyframes pulse-icon{0%,100%{opacity:0.7;transform:scale(1)}50%{opacity:1;transform:scale(1.1)}}
 #game-over .screen-title{
   font-size:clamp(42px,8vw,64px);
   color:#ff4444;
@@ -328,7 +326,7 @@ canvas{display:block;filter:saturate(1.5)}
 </div>
 
 <div id="game-over" class="overlay hidden">
-  <div class="screen-icon">&#128148;</div>
+  <svg class="screen-icon" viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="30" stroke="#ff4444" stroke-width="3" opacity="0.4"/><path d="M22 22l20 20M42 22L22 42" stroke="#ff4444" stroke-width="4" stroke-linecap="round"/></svg>
   <div class="screen-title">PONTE QUEBROU!</div>
   <div class="screen-sub">A ponte não resistiu. Tente escolher os produtos certos!</div>
   <div class="score-label">Sua pontuação</div>
