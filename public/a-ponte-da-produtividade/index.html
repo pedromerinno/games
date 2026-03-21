@@ -60,9 +60,28 @@ canvas{display:block;filter:saturate(1.5)}
 .btn-mode{font-family:'FuturaCond',sans-serif;font-size:22px;letter-spacing:0;text-transform:uppercase;padding:16px 50px;border-radius:40px;cursor:pointer;border:none;transition:transform 0.12s,box-shadow 0.12s,background 0.2s;color:#0d30e1;background:linear-gradient(180deg,#f0f5c4 0%,#e6eeaa 100%);box-shadow:0 6px 0 #a8d830,0 8px 20px rgba(0,0,0,0.3);white-space:nowrap}
 .btn-mode:hover{transform:translateY(-2px);box-shadow:0 8px 0 #a8d830,0 10px 25px rgba(0,0,0,0.3)}
 .btn-mode:active,.btn-mode.selected{transform:translateY(2px);background:linear-gradient(180deg,#3b6ef5 0%,#2a5cd4 100%);color:#fff;box-shadow:0 3px 0 #a8d830,0 5px 15px rgba(0,0,0,0.3)}
-.step2-board{background:#e4dec7;border-radius:16px;padding:48px 56px 44px;max-width:720px;width:90%;position:relative;box-shadow:4px 6px 0 rgba(0,0,0,0.15);transform:rotate(-1deg);display:flex;flex-direction:column;align-items:center;gap:32px}
-.step2-board::before{content:'';position:absolute;inset:-4px;border-radius:18px;background:rgba(180,200,220,0.35);z-index:-1;transform:rotate(1.5deg)}
-.step2-instructions{color:#0d30e1;font-family:'FuturaCond',sans-serif;font-size:20px;text-transform:uppercase;text-align:center;line-height:140%;letter-spacing:0}
+.step2-board{
+  position:relative;
+  max-width:720px;width:90%;
+  padding:64px 90px 56px;
+  display:flex;flex-direction:column;align-items:center;gap:32px;
+  background:none;border-radius:0;box-shadow:none;transform:none;
+}
+.step2-board::before{
+  content:'';position:absolute;inset:0;
+  background:#E4DEC5;
+  clip-path:polygon(6.1% 20.3%, 0% 70%, 17.5% 96.3%, 100% 100%, 99.2% 32.9%, 89.5% 0%);
+  z-index:0;
+}
+.step2-board::after{
+  content:'';position:absolute;
+  top:5.5%;left:2.2%;right:-2.2%;bottom:-5.5%;
+  background:#37CEFF;
+  clip-path:polygon(6.1% 20.3%, 0% 70%, 17.5% 96.3%, 100% 100%, 99.2% 32.9%, 89.5% 0%);
+  z-index:-1;
+}
+.step2-board>*{position:relative;z-index:1}
+.step2-instructions{color:#0032EA;font-family:'FuturaCond',sans-serif;font-size:22px;text-transform:uppercase;text-align:center;line-height:24px;letter-spacing:0;max-width:425px}
 .step2-modes{display:flex;gap:14px}
 .step2-board .settings{margin-bottom:0}
 .step2-board .setting-row{margin-bottom:12px}
@@ -224,8 +243,8 @@ canvas{display:block;filter:saturate(1.5)}
     <img src="assets/TITLE_Game.svg" class="start-title" style="width:min(500px,70vw);margin-bottom:12px" alt="A Ponte da Produtividade">
     <div class="step2-board">
       <div class="step2-instructions">
-        PULE PARA ESQUERDA OU DIREITA PARA ESCOLHER O PRODUTO CERTO.<br><br>
-        COLETE ESTACAS PARA CONSTRUIR A PONTE E CHEGUE ATÉ A MÁXIMA PRODUTIVIDADE DA LAVOURA!
+        <p>Pule para esquerda ou direita para escolher o produto certo.</p>
+        <p style="margin-top:20px">Colete estacas para construir a ponte e chegue até a Máxima produtividade da lavoura!</p>
       </div>
       <div class="step2-modes">
         <button class="btn-mode" id="btn-1p">01 JOGADOR</button>
