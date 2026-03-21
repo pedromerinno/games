@@ -1,5 +1,5 @@
 -- ============================================
--- Syngenta — A Ponte da Produtividade
+-- MNNO Games — A Ponte da Produtividade
 -- Supabase Migration
 -- ============================================
 

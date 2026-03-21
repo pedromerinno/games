@@ -29,7 +29,7 @@ function getLocalIPs() {
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log('\n========================================');
-  console.log('  SYNGENTA - MÁXIMO DE PRODUTIVIDADE');
+  console.log('  MNNO GAMES - A PONTE DA PRODUTIVIDADE');
   console.log('========================================\n');
   console.log(`  Local:   http://localhost:${PORT}`);
 

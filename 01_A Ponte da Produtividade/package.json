@@ -1,7 +1,7 @@
 {
-  "name": "syngenta-crowd-runner",
+  "name": "mnno-games",
   "version": "1.0.0",
-  "description": "Syngenta Máximo de Produtividade - Bridge Runner Game",
+  "description": "MNNO Games - A Ponte da Produtividade",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"

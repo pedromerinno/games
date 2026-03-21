@@ -6,9 +6,9 @@ var GameStorage = (function() {
   'use strict';
 
   var KEYS = {
-    players: 'syngenta_players',
-    scores: 'syngenta_scores',
-    config: 'syngenta_config'
+    players: 'mnno_players',
+    scores: 'mnno_scores',
+    config: 'mnno_config'
   };
 
   // ── Helpers ──
