@@ -1,10 +1,4 @@
--- ============================================
 -- MNNO Games — A Ponte da Produtividade
--- Supabase Migration
--- ============================================
--- Execute este SQL no Supabase Dashboard:
--- https://jfavxvmddhaiwfllezza.supabase.co
--- → SQL Editor → New Query → Colar e Run
 
 -- ── Players ──
 create table if not exists players (
@@ -33,28 +27,38 @@ create index if not exists scores_player_doc_idx on scores (player_doc);
 create index if not exists scores_score_idx on scores (score desc);
 create index if not exists scores_played_at_idx on scores (played_at desc);
 
--- ── RLS (Row Level Security) ──
+-- ── RLS ──
 alter table players enable row level security;
 alter table scores  enable row level security;
 
--- Players: insert, read, update (para upsert)
-create policy if not exists "anon_insert_players"
-  on players for insert to anon with check (true);
+-- Players policies
+do $$ begin
+  create policy "anon_insert_players" on players for insert to anon with check (true);
+exception when duplicate_object then null;
+end $$;
 
-create policy if not exists "anon_select_players"
-  on players for select to anon using (true);
+do $$ begin
+  create policy "anon_select_players" on players for select to anon using (true);
+exception when duplicate_object then null;
+end $$;
 
-create policy if not exists "anon_update_players"
-  on players for update to anon
-  using (true) with check (true);
+do $$ begin
+  create policy "anon_update_players" on players for update to anon using (true) with check (true);
+exception when duplicate_object then null;
+end $$;
 
--- Scores: insert, read, update (para upsert)
-create policy if not exists "anon_insert_scores"
-  on scores for insert to anon with check (true);
+-- Scores policies
+do $$ begin
+  create policy "anon_insert_scores" on scores for insert to anon with check (true);
+exception when duplicate_object then null;
+end $$;
 
-create policy if not exists "anon_select_scores"
-  on scores for select to anon using (true);
+do $$ begin
+  create policy "anon_select_scores" on scores for select to anon using (true);
+exception when duplicate_object then null;
+end $$;
 
-create policy if not exists "anon_update_scores"
-  on scores for update to anon
-  using (true) with check (true);
+do $$ begin
+  create policy "anon_update_scores" on scores for update to anon using (true) with check (true);
+exception when duplicate_object then null;
+end $$;

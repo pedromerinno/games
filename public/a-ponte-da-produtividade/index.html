@@ -111,7 +111,41 @@ canvas{display:block;filter:saturate(1.5)}
 .step2-board #form-error{color:#c62828}
 .btn-back{position:absolute;top:16px;left:20px;background:none;border:none;color:rgba(255,255,255,0.6);font-family:'FuturaCond',sans-serif;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:20px;transition:all 0.2s;letter-spacing:0}
 .btn-back:hover{color:#fff;background:rgba(255,255,255,0.1)}
-#game-over{background:rgba(0,0,0,0.75)}
+#game-over{
+  background:radial-gradient(ellipse at 50% 40%, rgba(180,20,20,0.6) 0%, rgba(0,0,0,0.92) 70%);
+}
+#game-over .screen-icon{
+  font-size:72px;
+  margin-bottom:12px;
+  animation:pulse-icon 1.5s ease-in-out infinite;
+}
+@keyframes pulse-icon{0%,100%{opacity:0.7;transform:scale(1)}50%{opacity:1;transform:scale(1.1)}}
+#game-over .screen-title{
+  font-size:clamp(42px,8vw,64px);
+  color:#ff4444;
+  text-shadow:0 0 40px rgba(255,68,68,0.5),0 4px 20px rgba(0,0,0,0.5);
+  margin-bottom:4px;
+}
+#game-over .score-label{
+  font-family:'DM Sans',sans-serif;
+  font-size:12px;
+  font-weight:500;
+  letter-spacing:0.15em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,0.35);
+  margin-top:20px;
+  margin-bottom:4px;
+}
+#game-over .big-score{
+  color:#fff;
+  font-size:clamp(48px,10vw,72px);
+  text-shadow:0 2px 20px rgba(255,255,255,0.15);
+}
+#game-over .screen-sub{
+  color:rgba(255,255,255,0.45);
+  font-size:14px;
+  margin-bottom:36px;
+}
 #win-screen{background:rgba(27,94,32,0.88)}
 .screen-title{color:#fff;font-family:'FuturaCond',sans-serif;font-size:38px;font-weight:800;margin-bottom:8px;text-shadow:0 4px 25px rgba(0,0,0,0.35);text-align:center;line-height:1.15;letter-spacing:0}
 .screen-sub{color:rgba(255,255,255,0.85);font-size:17px;margin-bottom:30px;text-align:center;max-width:330px;line-height:1.45}
@@ -294,10 +328,12 @@ canvas{display:block;filter:saturate(1.5)}
 </div>
 
 <div id="game-over" class="overlay hidden">
+  <div class="screen-icon">&#128148;</div>
   <div class="screen-title">PONTE QUEBROU!</div>
+  <div class="screen-sub">A ponte não resistiu. Tente escolher os produtos certos!</div>
+  <div class="score-label">Sua pontuação</div>
   <div id="final-score" class="big-score">0</div>
-  <div class="screen-sub">SynCoins conquistadas</div>
-  <button class="btn" id="restart-btn">TENTAR NOVAMENTE</button>
+  <button class="btn" id="restart-btn" style="margin-top:32px">TENTAR NOVAMENTE</button>
 </div>
 
 <div id="win-screen" class="overlay hidden">

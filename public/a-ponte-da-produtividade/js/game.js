@@ -916,14 +916,14 @@
         player1Score = finalScore;
         // Show turn screen for player 2
         document.getElementById('turn-title').textContent = 'Vez de ' + player2Name + '!';
-        document.getElementById('turn-sub').textContent = player1Name + ' fez ' + player1Score + ' SynCoins. Supere essa marca!';
+        document.getElementById('turn-sub').textContent = player1Name + ' fez ' + player1Score + ' pontos. Supere essa marca!';
         document.getElementById('turn-screen').classList.remove('hidden');
       } else {
         player2Score = finalScore;
         // Show final result
         var content = document.getElementById('result-content');
-        content.innerHTML = '<b>' + player1Name + ':</b> ' + player1Score + ' SynCoins<br>' +
-                            '<b>' + player2Name + ':</b> ' + player2Score + ' SynCoins';
+        content.innerHTML = '<b>' + player1Name + ':</b> ' + player1Score + ' pontos<br>' +
+                            '<b>' + player2Name + ':</b> ' + player2Score + ' pontos';
         var winner = document.getElementById('result-winner');
         if (player1Score > player2Score) {
           winner.textContent = player1Name + ' venceu!';
