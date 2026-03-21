@@ -40,28 +40,34 @@ header{
   transition:background 0.3s;
 }
 .logo{
-  display:flex;align-items:center;gap:10px;
+  display:flex;align-items:center;gap:12px;
   text-decoration:none;color:var(--text);
 }
-.logo-mark svg{
-  width:28px;height:28px;
-  display:block;
+.logo-mark{
+  width:34px;height:34px;border-radius:10px;
+  background:linear-gradient(145deg,#0091ff,#00c6ff);
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;font-weight:800;color:#fff;
+  letter-spacing:-0.02em;
+  box-shadow:0 0 0 1px rgba(0,145,255,0.2),0 2px 8px rgba(0,145,255,0.25);
+  position:relative;
+  overflow:hidden;
+}
+.logo-mark::after{
+  content:'';position:absolute;
+  top:-50%;left:-50%;width:100%;height:100%;
+  background:linear-gradient(135deg,rgba(255,255,255,0.25),transparent);
+  border-radius:50%;
 }
 .logo-text{
-  display:flex;flex-direction:column;
-  line-height:1;gap:1px;
-}
-.logo-name{
-  font-size:18px;font-weight:800;
-  letter-spacing:0.14em;
+  display:flex;align-items:baseline;gap:5px;
+  font-size:17px;font-weight:800;letter-spacing:0.06em;
   text-transform:uppercase;
-  color:#fff;
 }
-.logo-sub{
-  font-size:9px;font-weight:500;
-  letter-spacing:0.22em;
-  text-transform:uppercase;
-  color:var(--primary);
+.logo-text span{
+  font-weight:400;font-size:13px;
+  color:rgba(255,255,255,0.4);
+  letter-spacing:0.08em;
 }
 nav{display:flex;align-items:center;gap:32px}
 nav a{
@@ -298,8 +304,8 @@ footer{
 
 <header>
   <a href="/" class="logo">
-    <div class="logo-mark"><svg viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="7" fill="url(#lg)"/><path d="M7 22V10l4.5 7L16 10l4.5 7L25 10v12" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><defs><linearGradient id="lg" x1="0" y1="0" x2="32" y2="32"><stop stop-color="#0091ff"/><stop offset="1" stop-color="#00c6ff"/></linearGradient></defs></svg></div>
-    <div class="logo-text"><span class="logo-name">MNNO</span><span class="logo-sub">Games</span></div>
+    <div class="logo-mark">M</div>
+    <div class="logo-text">MNNO<span>Games</span></div>
   </a>
   <nav>
     <a href="#jogos">Jogos</a>
@@ -402,8 +408,8 @@ footer{
   <div class="footer-inner">
     <div class="footer-brand">
       <a href="/" class="logo" style="text-decoration:none">
-        <div class="logo-mark"><svg viewBox="0 0 32 32" fill="none"><rect width="32" height="32" rx="7" fill="url(#lg2)"/><path d="M7 22V10l4.5 7L16 10l4.5 7L25 10v12" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><defs><linearGradient id="lg2" x1="0" y1="0" x2="32" y2="32"><stop stop-color="#0091ff"/><stop offset="1" stop-color="#00c6ff"/></linearGradient></defs></svg></div>
-        <div class="logo-text"><span class="logo-name">MNNO</span><span class="logo-sub">Games</span></div>
+        <div class="logo-mark">M</div>
+        <div class="logo-text">MNNO<span>Games</span></div>
       </a>
       <span class="footer-text">Jogos que engajam.</span>
     </div>
