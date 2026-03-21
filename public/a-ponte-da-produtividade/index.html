@@ -63,21 +63,22 @@ canvas{display:block;filter:saturate(1.5)}
 .step2-board{
   position:relative;
   max-width:720px;width:90%;
-  padding:64px 90px 56px;
-  display:flex;flex-direction:column;align-items:center;gap:32px;
+  padding:48px 60px 40px;
+  display:flex;flex-direction:column;align-items:center;gap:28px;
   background:none;border-radius:0;box-shadow:none;transform:none;
 }
 .step2-board::before{
-  content:'';position:absolute;inset:0;
+  content:'';position:absolute;
+  inset:-20px -16px -24px -20px;
   background:#E4DEC5;
-  clip-path:polygon(6.1% 20.3%, 0% 70%, 17.5% 96.3%, 100% 100%, 99.2% 32.9%, 89.5% 0%);
+  clip-path:polygon(3% 10%, 0% 65%, 8% 97%, 100% 100%, 99.5% 18%, 92% 0%);
   z-index:0;
 }
 .step2-board::after{
   content:'';position:absolute;
-  top:5.5%;left:2.2%;right:-2.2%;bottom:-5.5%;
+  inset:-10px -28px -40px -12px;
   background:#37CEFF;
-  clip-path:polygon(6.1% 20.3%, 0% 70%, 17.5% 96.3%, 100% 100%, 99.2% 32.9%, 89.5% 0%);
+  clip-path:polygon(3% 10%, 0% 65%, 8% 97%, 100% 100%, 99.5% 18%, 92% 0%);
   z-index:-1;
 }
 .step2-board>*{position:relative;z-index:1}
