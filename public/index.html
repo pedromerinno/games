@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MNNO Games</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0a0f;
+  --surface:#12121a;
+  --surface-hover:#1a1a26;
+  --border:rgba(255,255,255,0.06);
+  --text:#f0f0f5;
+  --text-muted:rgba(240,240,245,0.45);
+  --accent:#c8ff2e;
+  --accent-dim:rgba(200,255,46,0.12);
+  --gradient:linear-gradient(135deg,#c8ff2e 0%,#7dde9c 100%);
+}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'DM Sans',system-ui,sans-serif;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+.noise{
+  position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0.03;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:128px 128px;
+}
+
+header{
+  position:relative;z-index:1;
+  padding:20px 32px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--border);
+}
+.logo{
+  font-family:'Syne',sans-serif;
+  font-weight:800;font-size:20px;letter-spacing:-0.02em;
+  display:flex;align-items:center;gap:10px;
+}
+.logo-mark{
+  width:32px;height:32px;border-radius:8px;
+  background:var(--gradient);
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:800;color:#0a0a0f;
+}
+.logo span{color:var(--accent)}
+.header-tag{
+  font-size:11px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;
+  color:var(--text-muted);
+  background:var(--accent-dim);
+  padding:6px 14px;border-radius:20px;
+  border:1px solid rgba(200,255,46,0.08);
+}
+
+.hero{
+  position:relative;z-index:1;
+  text-align:center;
+  padding:80px 32px 48px;
+}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--accent);
+  margin-bottom:24px;
+}
+.hero-badge::before,.hero-badge::after{
+  content:'';width:24px;height:1px;background:var(--accent);opacity:0.3;
+}
+.hero h1{
+  font-family:'Syne',sans-serif;
+  font-size:clamp(40px,8vw,72px);font-weight:800;
+  letter-spacing:-0.03em;line-height:1.05;
+  margin-bottom:20px;
+}
+.hero h1 em{
+  font-style:normal;
+  background:var(--gradient);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.hero p{
+  font-size:17px;line-height:1.6;
+  color:var(--text-muted);
+  max-width:480px;margin:0 auto;
+}
+
+.grid-section{
+  position:relative;z-index:1;
+  padding:32px 32px 80px;
+  max-width:960px;margin:0 auto;
+}
+.section-label{
+  font-family:'Syne',sans-serif;
+  font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;
+  color:var(--text-muted);
+  margin-bottom:24px;
+  padding-left:4px;
+}
+
+.games-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:20px;
+}
+
+.game-card{
+  position:relative;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:16px;
+  overflow:hidden;
+  text-decoration:none;color:inherit;
+  transition:transform 0.3s cubic-bezier(0.22,1,0.36,1),
+             border-color 0.3s,
+             box-shadow 0.3s;
+  display:flex;flex-direction:column;
+}
+.game-card:hover{
+  transform:translateY(-4px);
+  border-color:rgba(200,255,46,0.15);
+  box-shadow:0 20px 60px -20px rgba(200,255,46,0.08);
+}
+.game-card:hover .card-thumb{transform:scale(1.04)}
+.game-card:hover .card-arrow{
+  opacity:1;transform:translateX(0);
+}
+
+.card-thumb-wrap{
+  position:relative;
+  aspect-ratio:16/10;
+  overflow:hidden;
+  background:#1a1a26;
+}
+.card-thumb{
+  width:100%;height:100%;
+  object-fit:cover;
+  transition:transform 0.5s cubic-bezier(0.22,1,0.36,1);
+}
+.card-badge{
+  position:absolute;top:12px;left:12px;
+  font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;
+  padding:5px 12px;border-radius:20px;
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+}
+.card-badge.live{
+  background:rgba(125,222,156,0.15);color:#7dde9c;
+  border:1px solid rgba(125,222,156,0.2);
+}
+.card-badge.soon{
+  background:rgba(255,255,255,0.08);color:var(--text-muted);
+  border:1px solid rgba(255,255,255,0.06);
+}
+
+.card-body{
+  padding:20px 20px 24px;
+  display:flex;flex-direction:column;gap:8px;
+  flex:1;
+}
+.card-number{
+  font-family:'Syne',sans-serif;
+  font-size:11px;font-weight:700;letter-spacing:0.1em;
+  color:var(--accent);opacity:0.6;
+}
+.card-title{
+  font-family:'Syne',sans-serif;
+  font-size:20px;font-weight:800;letter-spacing:-0.01em;
+  line-height:1.2;
+}
+.card-desc{
+  font-size:14px;line-height:1.5;
+  color:var(--text-muted);
+  flex:1;
+}
+.card-footer{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px 20px;
+}
+.card-tags{display:flex;gap:6px}
+.card-tag{
+  font-size:10px;font-weight:600;letter-spacing:0.04em;
+  color:var(--text-muted);
+  background:rgba(255,255,255,0.04);
+  padding:4px 10px;border-radius:12px;
+  border:1px solid var(--border);
+}
+.card-arrow{
+  width:32px;height:32px;border-radius:50%;
+  background:var(--accent-dim);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;transform:translateX(-8px);
+  transition:opacity 0.3s,transform 0.3s;
+}
+.card-arrow svg{width:14px;height:14px;stroke:var(--accent);stroke-width:2.5;fill:none}
+
+.card-coming{
+  opacity:0.45;pointer-events:none;
+}
+.card-coming .card-thumb-wrap{
+  background:linear-gradient(135deg,#15151f 0%,#1a1a28 100%);
+}
+.card-coming .card-thumb-wrap::after{
+  content:'EM BREVE';
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;
+  font-size:14px;font-weight:700;letter-spacing:0.15em;
+  color:var(--text-muted);
+}
+
+footer{
+  position:relative;z-index:1;
+  text-align:center;
+  padding:32px;
+  border-top:1px solid var(--border);
+  font-size:13px;color:var(--text-muted);
+}
+footer span{color:var(--accent);font-weight:600}
+
+.glow{
+  position:fixed;z-index:0;pointer-events:none;
+  width:600px;height:600px;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(200,255,46,0.04) 0%,transparent 70%);
+  top:-200px;left:50%;transform:translateX(-50%);
+}
+
+@media(max-width:600px){
+  header{padding:16px 20px}
+  .hero{padding:48px 20px 32px}
+  .grid-section{padding:24px 20px 64px}
+  .games-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="noise"></div>
+<div class="glow"></div>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark">M</div>
+    MNNO <span>Games</span>
+  </div>
+  <div class="header-tag">Plataforma de Jogos</div>
+</header>
+
+<section class="hero">
+  <div class="hero-badge">MNNO Games</div>
+  <h1>Jogos que<br><em>engajam</em></h1>
+  <p>Experiencias interativas para eventos, treinamentos e campanhas. Jogaveis direto no navegador.</p>
+</section>
+
+<section class="grid-section">
+  <div class="section-label">Jogos Disponiveis</div>
+  <div class="games-grid">
+
+    <a href="/a-ponte-da-produtividade" class="game-card">
+      <div class="card-thumb-wrap">
+        <img class="card-thumb" src="/a-ponte-da-produtividade/assets/BG.jpg" alt="A Ponte da Produtividade">
+        <div class="card-badge live">Ao vivo</div>
+      </div>
+      <div class="card-body">
+        <div class="card-number">01</div>
+        <div class="card-title">A Ponte da Produtividade</div>
+        <div class="card-desc">Corra pela ponte, colete defensivos e desvie das pragas para alcancar a maxima produtividade da lavoura.</div>
+      </div>
+      <div class="card-footer">
+        <div class="card-tags">
+          <span class="card-tag">Three.js</span>
+          <span class="card-tag">1–2 jogadores</span>
+        </div>
+        <div class="card-arrow">
+          <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </div>
+      </div>
+    </a>
+
+    <div class="game-card card-coming">
+      <div class="card-thumb-wrap"></div>
+      <div class="card-body">
+        <div class="card-number">02</div>
+        <div class="card-title">Em breve</div>
+        <div class="card-desc">Novo jogo em desenvolvimento.</div>
+      </div>
+      <div class="card-footer">
+        <div class="card-tags">
+          <span class="card-tag">Coming soon</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="game-card card-coming">
+      <div class="card-thumb-wrap"></div>
+      <div class="card-body">
+        <div class="card-number">03</div>
+        <div class="card-title">Em breve</div>
+        <div class="card-desc">Novo jogo em desenvolvimento.</div>
+      </div>
+      <div class="card-footer">
+        <div class="card-tags">
+          <span class="card-tag">Coming soon</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<footer>
+  <span>MNNO Games</span> &mdash; Feito com precisao.
+</footer>
+
+</body>
+</html>
