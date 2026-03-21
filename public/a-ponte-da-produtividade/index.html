@@ -79,6 +79,51 @@ canvas{display:block;filter:saturate(1.5)}
 .btn:hover{transform:translateY(-2px);box-shadow:0 8px 0 #a8d830,0 10px 25px rgba(0,0,0,0.3)}
 .btn:active{transform:translateY(4px);box-shadow:0 2px 0 #a8d830,0 4px 10px rgba(0,0,0,0.3)}
 .big-score{color:#FFD700;font-size:56px;font-weight:900;margin:8px 0;font-family:'Syne',sans-serif}
+/* ── Preloader ── */
+#preloader{
+  position:fixed;inset:0;z-index:9999;
+  background:#0a0a0a;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  transition:opacity 0.6s cubic-bezier(0.22,1,0.36,1);
+}
+#preloader.done{opacity:0;pointer-events:none}
+#preload-number{
+  font-family:'Syne',sans-serif;
+  font-size:clamp(120px,28vw,260px);
+  font-weight:800;
+  line-height:1;
+  color:#fff;
+  letter-spacing:-0.04em;
+  user-select:none;
+}
+#preload-number span{
+  font-size:clamp(40px,8vw,80px);
+  font-weight:400;
+  color:rgba(255,255,255,0.3);
+  vertical-align:super;
+  margin-left:4px;
+}
+#preload-bar-track{
+  width:min(320px,60vw);height:2px;
+  background:rgba(255,255,255,0.08);
+  margin-top:32px;
+  overflow:hidden;
+}
+#preload-bar-fill{
+  height:100%;width:0%;
+  background:#fff;
+  transition:width 0.3s ease-out;
+}
+#preload-label{
+  font-family:'DM Sans',sans-serif;
+  font-size:11px;
+  font-weight:400;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  color:rgba(255,255,255,0.25);
+  margin-top:20px;
+}
 .hidden{display:none!important}
 .settings{width:100%;max-width:320px;margin-bottom:24px}
 .setting-row{margin-bottom:16px}
@@ -97,6 +142,12 @@ canvas{display:block;filter:saturate(1.5)}
 </style>
 </head>
 <body>
+
+<div id="preloader">
+  <div id="preload-number">0<span>%</span></div>
+  <div id="preload-bar-track"><div id="preload-bar-fill"></div></div>
+  <div id="preload-label">Carregando</div>
+</div>
 
 <div id="ui">
   <div id="hud-wrap">
@@ -217,13 +268,94 @@ canvas{display:block;filter:saturate(1.5)}
   <button class="btn" id="result-btn" style="margin-top:20px">JOGAR NOVAMENTE</button>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="/shared/storage.js"></script>
-<script src="/shared/sync.js"></script>
-<script src="js/game.js"></script>
-<!-- Game logic is now in js/game.js -->
-<script>/* game code moved to js/game.js */
+<script>
+(function(){
+  var assets = [
+    { type:'script', src:'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js' },
+    { type:'script', src:'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js' },
+    { type:'script', src:'/shared/storage.js' },
+    { type:'script', src:'/shared/sync.js' },
+    { type:'image',  src:'assets/BG.jpg' },
+    { type:'image',  src:'assets/Logo_AcessaAgro.svg' },
+    { type:'image',  src:'assets/TITLE_Game.svg' },
+    { type:'font',   src:'assets/Futura Condensed Extra Bold.otf', family:'FuturaCond' }
+  ];
+
+  var total = assets.length + 1;
+  var loaded = 0;
+  var displayed = 0;
+  var elNum = document.getElementById('preload-number');
+  var elBar = document.getElementById('preload-bar-fill');
+  var preloader = document.getElementById('preloader');
+  var raf;
+
+  function tick(pct) {
+    elNum.innerHTML = Math.round(pct) + '<span>%</span>';
+    elBar.style.width = pct + '%';
+  }
+
+  function animateCounter() {
+    var target = Math.round((loaded / total) * 100);
+    if (displayed < target) {
+      displayed += Math.max(1, Math.round((target - displayed) * 0.18));
+      if (displayed > target) displayed = target;
+      tick(displayed);
+      raf = requestAnimationFrame(animateCounter);
+    } else if (displayed >= 100) {
+      tick(100);
+      setTimeout(function(){
+        preloader.classList.add('done');
+        setTimeout(function(){ preloader.remove(); }, 600);
+      }, 300);
+    } else {
+      raf = requestAnimationFrame(animateCounter);
+    }
+  }
+
+  function onAssetLoaded() {
+    loaded++;
+    if (!raf) raf = requestAnimationFrame(animateCounter);
+  }
+
+  function loadScript(src) {
+    return new Promise(function(resolve) {
+      var s = document.createElement('script');
+      s.src = src;
+      s.onload = function(){ onAssetLoaded(); resolve(); };
+      s.onerror = function(){ onAssetLoaded(); resolve(); };
+      document.body.appendChild(s);
+    });
+  }
+
+  function loadImage(src) {
+    var img = new Image();
+    img.onload = img.onerror = onAssetLoaded;
+    img.src = src;
+  }
+
+  function loadFont(src, family) {
+    var f = new FontFace(family, 'url(' + src + ')');
+    f.load().then(function(face){
+      document.fonts.add(face);
+      onAssetLoaded();
+    }).catch(function(){ onAssetLoaded(); });
+  }
+
+  assets.forEach(function(a) {
+    if (a.type === 'image') loadImage(a.src);
+    else if (a.type === 'font') loadFont(a.src, a.family);
+  });
+
+  var scriptQueue = assets.filter(function(a){ return a.type === 'script'; });
+  scriptQueue.reduce(function(chain, a) {
+    return chain.then(function(){ return loadScript(a.src); });
+  }, Promise.resolve()).then(function(){
+    var gs = document.createElement('script');
+    gs.src = 'js/game.js';
+    gs.onload = gs.onerror = onAssetLoaded;
+    document.body.appendChild(gs);
+  });
+})();
 </script>
 </body>
 </html>
