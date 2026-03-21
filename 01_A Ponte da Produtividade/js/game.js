@@ -1125,8 +1125,11 @@
     if (ds) ds.value = savedConfig.difficulty || 2;
   }
 
-  // Init Supabase sync (configure your credentials here)
-  // GameSync.init('https://YOUR_PROJECT.supabase.co', 'YOUR_ANON_KEY');
+  // Init Supabase sync
+  GameSync.init(
+    'https://jfavxvmddhaiwfllezza.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpmYXZ4dm1kZGhhaXdmbGxlenphIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwOTk2MjcsImV4cCI6MjA4OTY3NTYyN30.46oU1rkAfs89DJMsKWiqPX6RRasSB1z4-zgcCku39FU'
+  );
 
   // Sync status indicator
   var syncDot = document.getElementById('sync-dot');
