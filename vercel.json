@@ -2,7 +2,7 @@
   "buildCommand": "",
   "outputDirectory": "public",
   "framework": null,
-  "trailingSlash": false,
+  "trailingSlash": true,
   "headers": [
     {
       "source": "/shared/(.*)",
