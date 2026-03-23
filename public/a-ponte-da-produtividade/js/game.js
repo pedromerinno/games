@@ -55,6 +55,7 @@
   var jumping = false, jumpT = 0, baseY = 0;
   var inputBuffer = 0;
   var tgtXTimer = null;
+  var lastGateEnd = 0;
 
   // ─── DOM ─────────────────────────────────
   var elSaldo = document.getElementById('hud-saldo');
@@ -566,6 +567,7 @@
 
   function makeGates() {
     gates = [];
+    lastGateEnd = GSPACE * (NGATES - 1) + 16 + GSPACE;
     for (var i = 0; i < NGATES; i++) {
       var z = -(GSPACE * i + 16);
       var goodSide = Math.random() > 0.5 ? 'left' : 'right';
@@ -1019,6 +1021,10 @@
     var elapsed = clock.elapsedTime;
     var speed = ISPEED + Math.min(elapsed * 0.5, MSPEED - ISPEED);
 
+    if (zPos > lastGateEnd) {
+      speed = Math.max(speed, MSPEED * 1.3);
+    }
+
     zPos += speed * dt;
     curX += (tgtX - curX) * 12 * dt;
 
@@ -1048,8 +1054,9 @@
     camera.position.set(curX * 0.12, 12 + Math.sin(elapsed * 0.4) * 0.2, -zPos + 14);
     camera.lookAt(curX * 0.15, 1, -zPos - 10);
 
-    // Build bridge
-    if (lastPZ > -zPos - 18 && stakes > 0) {
+    // Build bridge (auto-bridge after all gates are passed)
+    var pastAllGates = zPos > lastGateEnd;
+    if (lastPZ > -zPos - 18 && (stakes > 0 || pastAllGates)) {
       buildTo(-zPos - 18);
     }
 
