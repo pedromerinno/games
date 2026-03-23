@@ -4,9 +4,9 @@
   // ─── Config ──────────────────────────────
   var BW = 10;          // bridge width
   var PL = 2.0;         // plank length
-  var DIST = 1680;      // total distance (4x)
-  var GSPACE = 18;      // gate spacing
-  var NGATES = 80;
+  var DIST = 1680;      // total distance
+  var GSPACE = 24;      // gate spacing
+  var NGATES = 60;
   var ISPEED = 12;
   var MSPEED = 30;
   var ISTAKES = 15;
@@ -56,6 +56,7 @@
   var inputBuffer = 0;
   var tgtXTimer = null;
   var lastGateEnd = 0;
+  var endGroup = null;
 
   // ─── DOM ─────────────────────────────────
   var elSaldo = document.getElementById('hud-saldo');
@@ -105,28 +106,25 @@
     fill.position.set(-15, 10, -10);
     scene.add(fill);
 
-    // Water
-    var wGeo = new THREE.PlaneGeometry(500, DIST + 300);
+    // Water (oversized to cover any DIST)
+    var wGeo = new THREE.PlaneGeometry(500, 3000);
     var wMat = new THREE.MeshStandardMaterial({ color: 0x1976D2, roughness: 0.05, metalness: 0.1, transparent: true, opacity: 0.88 });
     var water = new THREE.Mesh(wGeo, wMat);
     water.rotation.x = -Math.PI / 2;
-    water.position.set(0, -3, -DIST / 2);
+    water.position.set(0, -3, -1200);
     water.receiveShadow = true;
     scene.add(water);
 
-    // Wave hint
     var w2 = new THREE.Mesh(
-      new THREE.PlaneGeometry(500, DIST + 300),
+      new THREE.PlaneGeometry(500, 3000),
       new THREE.MeshBasicMaterial({ color: 0x64B5F6, transparent: true, opacity: 0.12 })
     );
     w2.rotation.x = -Math.PI / 2;
-    w2.position.set(0, -2.8, -DIST / 2);
+    w2.position.set(0, -2.8, -1200);
     scene.add(w2);
 
-    // Platforms
-    makeIsland(5, 20);
-    makeIsland(-DIST - 8, 60);
-    makeEndReward();
+    // Start platform
+    makeIsland(5, 20, null);
 
     // Bridge container
     bridgeGroup = new THREE.Group();
@@ -287,16 +285,18 @@
     if (diffLevel === 1) {
       gateGoodMin = 12; gateGoodRange = 15;
       gateBadMin = 3;   gateBadRange = 5;
-      GSPACE = 22;
+      GSPACE = 28;
     } else if (diffLevel === 2) {
       gateGoodMin = 8;  gateGoodRange = 12;
       gateBadMin = 5;   gateBadRange = 10;
-      GSPACE = 18;
+      GSPACE = 24;
     } else {
       gateGoodMin = 5;  gateGoodRange = 8;
       gateBadMin = 8;   gateBadRange = 15;
-      GSPACE = 14;
+      GSPACE = 20;
     }
+
+    DIST = GSPACE * (NGATES - 1) + 16 + 40;
 
     playerName = nome;
     playerDoc = doc;
@@ -311,12 +311,14 @@
     // Save config
     GameStorage.saveConfig({ speed: speedLevel, difficulty: diffLevel });
 
+    buildEndScene();
     rebuildGates();
     startGame();
   }
 
   // ─── Island ──────────────────────────────
-  function makeIsland(z, depth) {
+  function makeIsland(z, depth, parent) {
+    var target = parent || scene;
     var top = new THREE.Mesh(
       new THREE.BoxGeometry(22, 1, depth),
       new THREE.MeshStandardMaterial({ color: 0x7CB342, roughness: 0.85 })
@@ -324,7 +326,7 @@
     top.position.set(0, -0.5, z - depth / 2 + 8);
     top.receiveShadow = true;
     top.castShadow = true;
-    scene.add(top);
+    target.add(top);
 
     var dirt = new THREE.Mesh(
       new THREE.BoxGeometry(22, 3, depth),
@@ -332,7 +334,7 @@
     );
     dirt.position.set(0, -2.5, z - depth / 2 + 8);
     dirt.castShadow = true;
-    scene.add(dirt);
+    target.add(dirt);
 
     var gc = [0x66BB6A, 0x81C784, 0x4CAF50, 0x8BC34A];
     for (var i = 0; i < 15; i++) {
@@ -343,12 +345,20 @@
         new THREE.MeshStandardMaterial({ color: gc[i % 4], roughness: 1 })
       );
       blade.position.set(gx, 0.12, gz);
-      scene.add(blade);
+      target.add(blade);
     }
   }
 
+  function buildEndScene() {
+    if (endGroup) scene.remove(endGroup);
+    endGroup = new THREE.Group();
+    makeIsland(-DIST - 8, 60, endGroup);
+    makeEndRewardTo(endGroup);
+    scene.add(endGroup);
+  }
+
   // ─── End reward — full farm ──────────────
-  function makeEndReward() {
+  function makeEndRewardTo(target) {
     var fz = -DIST - 5; // farm center Z
     var woodMat = new THREE.MeshStandardMaterial({ color: 0x6D4C41, roughness: 0.8 });
     var redMat = new THREE.MeshStandardMaterial({ color: 0xB71C1C, roughness: 0.7 });
@@ -362,15 +372,13 @@
     // Left pillar
     var pillarL = new THREE.Mesh(new THREE.BoxGeometry(0.5, 5, 0.5), archMat);
     pillarL.position.set(-BW / 2 - 0.5, 2.5, fz + 35);
-    scene.add(pillarL);
-    // Right pillar
+    target.add(pillarL);
     var pillarR = pillarL.clone();
     pillarR.position.x = BW / 2 + 0.5;
-    scene.add(pillarR);
-    // Top bar
+    target.add(pillarR);
     var archBar = new THREE.Mesh(new THREE.BoxGeometry(BW + 1.5, 0.6, 0.5), archMat);
     archBar.position.set(0, 5.2, fz + 35);
-    scene.add(archBar);
+    target.add(archBar);
     // Arch sign
     var archCv = document.createElement('canvas');
     archCv.width = 512; archCv.height = 80;
@@ -384,31 +392,29 @@
       new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(archCv) })
     );
     archLabel.position.set(0, 5.2, fz + 35.3);
-    scene.add(archLabel);
+    target.add(archLabel);
 
     // ── Barn (celeiro) ──
     var barnBody = new THREE.Mesh(new THREE.BoxGeometry(6, 4, 5), redMat);
     barnBody.position.set(-6, 2, fz - 10);
     barnBody.castShadow = true;
-    scene.add(barnBody);
-    // Barn roof
+    target.add(barnBody);
     var barnRoof = new THREE.Mesh(new THREE.ConeGeometry(4.5, 2.5, 4), roofMat);
     barnRoof.position.set(-6, 5, fz - 10);
     barnRoof.rotation.y = Math.PI / 4;
-    scene.add(barnRoof);
-    // Barn door
+    target.add(barnRoof);
     var barnDoor = new THREE.Mesh(new THREE.PlaneGeometry(2, 3), woodMat);
     barnDoor.position.set(-6, 1.5, fz - 7.49);
-    scene.add(barnDoor);
+    target.add(barnDoor);
 
     // ── Silo ──
     var silo = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 7, 12), whiteMat);
     silo.position.set(7, 3.5, fz - 12);
     silo.castShadow = true;
-    scene.add(silo);
+    target.add(silo);
     var siloTop = new THREE.Mesh(new THREE.ConeGeometry(1.7, 1.5, 12), roofMat);
     siloTop.position.set(7, 7.5, fz - 12);
-    scene.add(siloTop);
+    target.add(siloTop);
 
     // ── Soy bags — big piles ──
     for (var pile = 0; pile < 3; pile++) {
@@ -418,7 +424,7 @@
           var bag = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.6, 0.8), bagMat);
           bag.position.set(px + (col - (4 - row) / 2) * 1.3, row * 0.6 + 0.3, fz - 5 - pile * 2);
           bag.rotation.y = (Math.random() - 0.5) * 0.15;
-          scene.add(bag);
+          target.add(bag);
         }
       }
     }
@@ -431,7 +437,7 @@
         c.position.set(cpx + (Math.random() - 0.5) * 0.8, 0.03 + i * 0.06, fz - 15 + (Math.random() - 0.5) * 0.8);
         c.rotation.x = Math.random() * 0.2;
         c.rotation.z = Math.random() * 0.2;
-        scene.add(c);
+        target.add(c);
       }
     }
 
@@ -446,7 +452,7 @@
           var bush = new THREE.Mesh(farmSoyGeo, farmSoyMat);
           bush.position.set(sx, -0.1, sz);
           bush.scale.set(0.7, 0.35, 0.6);
-          scene.add(bush);
+          target.add(bush);
         }
       }
     }
@@ -457,11 +463,10 @@
       // Left fence
       var fencePost = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.5, 5), fenceMat);
       fencePost.position.set(-BW / 2 - 1, 0.75, fz + 18 - fi * 2.5);
-      scene.add(fencePost);
-      // Right fence
+      target.add(fencePost);
       var fencePost2 = fencePost.clone();
       fencePost2.position.x = BW / 2 + 1;
-      scene.add(fencePost2);
+      target.add(fencePost2);
     }
 
     // ── "LAVOURA" sign ──
@@ -486,7 +491,7 @@
     signLabel.position.set(0, 3.8, 0.06);
     signG.add(signLabel);
     signG.position.set(BW / 2 + 4, 0, fz + 15);
-    scene.add(signG);
+    target.add(signG);
   }
 
   // ─── Player ──────────────────────────────
@@ -1022,7 +1027,7 @@
     var speed = ISPEED + Math.min(elapsed * 0.5, MSPEED - ISPEED);
 
     if (zPos > lastGateEnd) {
-      speed = Math.max(speed, MSPEED * 1.3);
+      speed = Math.max(speed, MSPEED * 2);
     }
 
     zPos += speed * dt;
@@ -1084,7 +1089,7 @@
         if (playerGroup.position.y > -18) {
           requestAnimationFrame(fallFn);
         } else {
-          handleGameEnd(coins + bonusC, false);
+          handleGameEnd(Math.min(coins + bonusC, 10000), false);
         }
       };
       fallFn();
@@ -1105,7 +1110,7 @@
           passed[gate.idx + '-right'] = true;
           if (gate.value > 0) {
             stakes += gate.value;
-            bonusC += gate.value * 5;
+            bonusC += gate.value * 4;
             showFloat('+' + gate.value + ' Produtividade', '#4CAF50');
           } else {
             stakes = Math.max(0, stakes + gate.value);
@@ -1126,16 +1131,16 @@
       }
     }
 
-    coins = Math.floor(zPos / 5) * 5;
+    coins = Math.floor(zPos / 5) * 3;
     updateUI();
-    // progress updated via updateUI()
 
     // Win
     if (zPos >= DIST) {
-      bonusC += stakes * 10;
+      bonusC += stakes * 5;
+      var finalScore = Math.min(coins + bonusC, 10000);
       running = false;
       disableTouch();
-      handleGameEnd(coins + bonusC, true);
+      handleGameEnd(finalScore, true);
     }
 
     renderer.render(scene, camera);
