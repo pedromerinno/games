@@ -439,7 +439,7 @@ canvas{display:block;filter:saturate(1.5)}
     return chain.then(function(){ return loadScript(a.src); });
   }, Promise.resolve()).then(function(){
     var gs = document.createElement('script');
-    gs.src = 'js/game.js';
+    gs.src = 'js/game.js?v=' + Date.now();
     gs.onload = gs.onerror = onAssetLoaded;
     document.body.appendChild(gs);
   });
