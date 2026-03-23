@@ -53,6 +53,7 @@
   var lastPZ = 2, planks = [];
   var gates = [], passed = {};
   var jumping = false, jumpT = 0, baseY = 0;
+  var inputBuffer = 0;
 
   // ─── DOM ─────────────────────────────────
   var elSaldo = document.getElementById('hud-saldo');
@@ -855,9 +856,18 @@
 
   // ─── Input ───────────────────────────────
   function move(dir) {
-    if (!running || jumping || falling) return;
+    if (!running || falling) return;
+    if (jumping) {
+      inputBuffer = dir;
+      return;
+    }
+    executeMove(dir);
+  }
+
+  function executeMove(dir) {
     jumping = true;
     jumpT = 0;
+    inputBuffer = 0;
     tgtX = dir * (BW / 2 - 0.3);
     setTimeout(function() { tgtX = 0; }, 350);
   }
@@ -955,7 +965,7 @@
     zPos = 0; tgtX = 0; curX = 0;
     stakes = ISTAKES; coins = 0; bonusC = 0;
     lastPileCount = -1;
-    lastPZ = 2; falling = false;
+    lastPZ = 2; falling = false; jumping = false; inputBuffer = 0;
     passed = {};
 
     // HUD: player name
@@ -1014,7 +1024,12 @@
       jumpT += dt;
       var p = Math.min(jumpT / 0.3, 1);
       baseY = Math.sin(p * Math.PI) * 1.0;
-      if (p >= 1) { jumping = false; baseY = 0; }
+      if (p >= 1) {
+        jumping = false; baseY = 0;
+        if (inputBuffer !== 0) {
+          executeMove(inputBuffer);
+        }
+      }
     }
 
     playerGroup.position.set(curX, baseY, -zPos);
