@@ -9,7 +9,7 @@
   var NGATES = 60;
   var ISPEED = 12;
   var MSPEED = 30;
-  var ISTAKES = 15;
+  var ISTAKES = 20;
 
   // Multiplayer state
   var gameMode = 1; // 1 or 2
@@ -291,7 +291,7 @@
       gateBadMin = 5;   gateBadRange = 10;
       GSPACE = 24;
     } else {
-      gateGoodMin = 5;  gateGoodRange = 8;
+      gateGoodMin = 8;  gateGoodRange = 8;
       gateBadMin = 8;   gateBadRange = 15;
       GSPACE = 20;
     }
@@ -820,7 +820,7 @@
       }
 
       planks.push(lastPZ);
-      stakes--;
+      if (!unlimited && planks.length % 2 === 0) stakes--;
     }
     updateUI();
   }
