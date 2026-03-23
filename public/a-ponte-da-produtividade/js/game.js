@@ -782,13 +782,13 @@
   }
 
   // ─── Bridge ──────────────────────────────
-  function buildTo(targetZ) {
+  function buildTo(targetZ, unlimited) {
     var pm1 = new THREE.MeshStandardMaterial({ color: 0x8D6E63, roughness: 0.65 });
     var pm2 = new THREE.MeshStandardMaterial({ color: 0x7B5B4C, roughness: 0.7 });
     var railMat = new THREE.MeshStandardMaterial({ color: 0x5D4037, roughness: 0.75 });
     var ropeMat = new THREE.MeshStandardMaterial({ color: 0xA1887F, roughness: 1 });
 
-    while (lastPZ > targetZ && stakes > 0) {
+    while (lastPZ > targetZ && (stakes > 0 || unlimited)) {
       lastPZ -= PL;
       var mat = planks.length % 2 === 0 ? pm1 : pm2;
       var plank = new THREE.Mesh(new THREE.BoxGeometry(BW, 0.18, PL - 0.06), mat);
@@ -1062,7 +1062,7 @@
     // Build bridge (auto-bridge after all gates are passed)
     var pastAllGates = zPos > lastGateEnd;
     if (lastPZ > -zPos - 18 && (stakes > 0 || pastAllGates)) {
-      buildTo(-zPos - 18);
+      buildTo(-zPos - 18, pastAllGates);
     }
 
     // On bridge check
