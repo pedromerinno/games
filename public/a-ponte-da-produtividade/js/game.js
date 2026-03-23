@@ -54,6 +54,7 @@
   var gates = [], passed = {};
   var jumping = false, jumpT = 0, baseY = 0;
   var inputBuffer = 0;
+  var tgtXTimer = null;
 
   // ─── DOM ─────────────────────────────────
   var elSaldo = document.getElementById('hud-saldo');
@@ -868,8 +869,9 @@
     jumping = true;
     jumpT = 0;
     inputBuffer = 0;
+    if (tgtXTimer) clearTimeout(tgtXTimer);
     tgtX = dir * (BW / 2 - 0.3);
-    setTimeout(function() { tgtX = 0; }, 350);
+    tgtXTimer = setTimeout(function() { tgtX = 0; tgtXTimer = null; }, 350);
   }
 
   function onKey(e) {
@@ -966,6 +968,7 @@
     stakes = ISTAKES; coins = 0; bonusC = 0;
     lastPileCount = -1;
     lastPZ = 2; falling = false; jumping = false; inputBuffer = 0;
+    if (tgtXTimer) { clearTimeout(tgtXTimer); tgtXTimer = null; }
     passed = {};
 
     // HUD: player name
