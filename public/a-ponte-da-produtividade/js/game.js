@@ -233,7 +233,7 @@
   }
 
   // Gate difficulty params (defaults = Normal)
-  var gateGoodMin = 8, gateGoodRange = 12;
+  var gateGoodMin = Math.ceil(GSPACE / PL), gateGoodRange = 12;
   var gateBadMin = 5, gateBadRange = 10;
   var playerName = '', playerDoc = '';
 
@@ -283,17 +283,17 @@
     MSPEED = [0, 22, 32, 45][speedLevel];
 
     if (diffLevel === 1) {
-      gateGoodMin = 12; gateGoodRange = 15;
-      gateBadMin = 3;   gateBadRange = 5;
       GSPACE = 28;
+      gateGoodMin = Math.ceil(GSPACE / PL); gateGoodRange = 15;
+      gateBadMin = 3;   gateBadRange = 5;
     } else if (diffLevel === 2) {
-      gateGoodMin = 8;  gateGoodRange = 12;
-      gateBadMin = 5;   gateBadRange = 10;
       GSPACE = 24;
+      gateGoodMin = Math.ceil(GSPACE / PL); gateGoodRange = 12;
+      gateBadMin = 5;   gateBadRange = 10;
     } else {
-      gateGoodMin = 8;  gateGoodRange = 8;
-      gateBadMin = 8;   gateBadRange = 15;
       GSPACE = 20;
+      gateGoodMin = Math.ceil(GSPACE / PL); gateGoodRange = 8;
+      gateBadMin = 8;   gateBadRange = 15;
     }
 
     DIST = GSPACE * (NGATES - 1) + 16 + 40;
