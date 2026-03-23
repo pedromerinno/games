@@ -57,6 +57,7 @@
   var tgtXTimer = null;
   var lastGateEnd = 0;
   var endGroup = null;
+  var winTriggered = false, winTimer = null, winFinalScore = 0;
 
   // ─── DOM ─────────────────────────────────
   var elSaldo = document.getElementById('hud-saldo');
@@ -976,6 +977,8 @@
     lastPileCount = -1;
     lastPZ = 2; falling = false; jumping = false; inputBuffer = 0;
     if (tgtXTimer) { clearTimeout(tgtXTimer); tgtXTimer = null; }
+    if (winTimer) { clearTimeout(winTimer); winTimer = null; }
+    winTriggered = false; winFinalScore = 0;
     passed = {};
 
     // HUD: player name
@@ -1026,8 +1029,9 @@
     var elapsed = clock.elapsedTime;
     var speed = ISPEED + Math.min(elapsed * 0.5, MSPEED - ISPEED);
 
+    // After all gates, slow down so the player can enjoy the farm
     if (zPos > lastGateEnd) {
-      speed = Math.max(speed, MSPEED * 2);
+      speed = Math.min(speed, ISPEED * 0.7);
     }
 
     zPos += speed * dt;
@@ -1055,9 +1059,14 @@
     if (playerGroup.children[6]) playerGroup.children[6].rotation.x = Math.sin(elapsed * ls + 1) * 0.3;
     if (playerGroup.children[7]) playerGroup.children[7].rotation.x = -Math.sin(elapsed * ls + 1) * 0.3;
 
-    // Camera
-    camera.position.set(curX * 0.12, 12 + Math.sin(elapsed * 0.4) * 0.2, -zPos + 14);
-    camera.lookAt(curX * 0.15, 1, -zPos - 10);
+    // Camera — lower and closer during farm stroll to show the scenery
+    if (winTriggered) {
+      camera.position.set(curX * 0.15 + 3, 6 + Math.sin(elapsed * 0.3) * 0.3, -zPos + 10);
+      camera.lookAt(curX * 0.1, 2, -zPos - 12);
+    } else {
+      camera.position.set(curX * 0.12, 12 + Math.sin(elapsed * 0.4) * 0.2, -zPos + 14);
+      camera.lookAt(curX * 0.15, 1, -zPos - 10);
+    }
 
     // Build bridge (auto-bridge after all gates are passed)
     var pastAllGates = zPos > lastGateEnd;
@@ -1134,13 +1143,22 @@
     coins = Math.floor(zPos / 5) * 3;
     updateUI();
 
-    // Win
-    if (zPos >= DIST) {
+    // Win — walk through the farm for a few seconds before showing the screen
+    if (zPos >= DIST && !winTriggered) {
+      winTriggered = true;
+      disableTouch();
       bonusC += stakes * 5;
       var finalScore = Math.min(coins + bonusC, 10000);
-      running = false;
-      disableTouch();
-      handleGameEnd(finalScore, true);
+      winFinalScore = finalScore;
+      // Keep walking slowly through the farm
+      winTimer = setTimeout(function() {
+        running = false;
+        handleGameEnd(winFinalScore, true);
+      }, 3500);
+    }
+    // Slow stroll during farm walk
+    if (winTriggered) {
+      speed = ISPEED * 0.45;
     }
 
     renderer.render(scene, camera);
