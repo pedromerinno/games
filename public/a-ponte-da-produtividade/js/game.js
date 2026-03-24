@@ -21,35 +21,6 @@
     winElapsed: 0
   };
 
-  // ---- Split-screen state ----
-  var splitMode = false;
-  var p1State = null;
-  var p2State = null;
-  var p1Obj = null;   // { group, stakesPileGroup, lastPileCount }
-  var p2Obj = null;
-  var p1Bridge = null; // { group, planks, lastPZ }
-  var p2Bridge = null;
-  var splitRunning = false;
-  var splitClock = null;
-
-  // Bridge X offsets for split mode
-  var P1_OFFSET_X = -8;
-  var P2_OFFSET_X = 8;
-
-  function makePlayerState() {
-    return {
-      zPos: 0, curX: 0, tgtX: 0,
-      stakes: 0, coins: 0, bonusC: 0,
-      running: true, falling: false, jumping: false,
-      jumpT: 0, baseY: 0, tgtXTimer: null,
-      winTriggered: false, winTimer: null,
-      winFinalScore: 0, winElapsed: 0,
-      finished: false, won: false,
-      passed: {},
-      inputBuffer: 0
-    };
-  }
-
   // ---- Master init ----
   function masterInit() {
     var cfg = PONTE.config;
@@ -80,7 +51,52 @@
       move(dir);
     });
 
-    // Intro
+    // Check for URL params (iframe split-screen mode)
+    var urlParams = new URLSearchParams(window.location.search);
+    var iframeName = urlParams.get('player');
+    if (iframeName) {
+      // Auto-start mode: skip intro, start game immediately
+      var iframeDoc = urlParams.get('doc') || '';
+      var iframeControls = urlParams.get('controls') || 'all';
+      var iframeSpeed = parseInt(urlParams.get('speed')) || 2;
+      var iframeDiff = parseInt(urlParams.get('difficulty')) || 2;
+
+      // Set control mode
+      PONTE.input.setControlMode(iframeControls);
+
+      // Apply speed config
+      cfg.ISPEED = [0, 10, 14, 20][iframeSpeed];
+      cfg.MSPEED = [0, 22, 32, 45][iframeSpeed];
+
+      // Apply difficulty config
+      if (iframeDiff === 1) {
+        cfg.GSPACE = 28;
+        cfg.gateGoodMin = Math.ceil(cfg.GSPACE / cfg.PL); cfg.gateGoodRange = 15;
+        cfg.gateBadMin = 3; cfg.gateBadRange = 5;
+      } else if (iframeDiff === 2) {
+        cfg.GSPACE = 24;
+        cfg.gateGoodMin = Math.ceil(cfg.GSPACE / cfg.PL); cfg.gateGoodRange = 12;
+        cfg.gateBadMin = 5; cfg.gateBadRange = 10;
+      } else {
+        cfg.GSPACE = 20;
+        cfg.gateGoodMin = Math.ceil(cfg.GSPACE / cfg.PL); cfg.gateGoodRange = 8;
+        cfg.gateBadMin = 8; cfg.gateBadRange = 15;
+      }
+      cfg.DIST = cfg.GSPACE * (cfg.NGATES - 1) + 16 + 40;
+
+      // Store player info for scoring
+      PONTE._iframePlayer = { name: iframeName, doc: iframeDoc };
+
+      // Rebuild gates/farm with new config
+      PONTE.farm.buildEndScene();
+      PONTE.gates.rebuild();
+
+      // Start the game directly
+      startGameDirect(iframeName);
+      return;
+    }
+
+    // Normal flow: init intro
     PONTE.intro.init();
 
     // Hide HUD on intro screens
@@ -140,45 +156,13 @@
     state.tgtXTimer = setTimeout(function() { state.tgtX = 0; state.tgtXTimer = null; }, 350);
   }
 
-  // ---- Split-screen input handling ----
-  function moveP1(dir) {
-    if (!p1State || !p1State.running || p1State.falling || p1State.finished) return;
-    if (p1State.jumping) {
-      p1State.inputBuffer = dir;
-      return;
-    }
-    executeMoveFor(p1State, dir);
-  }
-
-  function moveP2(dir) {
-    if (!p2State || !p2State.running || p2State.falling || p2State.finished) return;
-    if (p2State.jumping) {
-      p2State.inputBuffer = dir;
-      return;
-    }
-    executeMoveFor(p2State, dir);
-  }
-
-  function executeMoveFor(ps, dir) {
-    var cfg = PONTE.config;
-    ps.jumping = true;
-    ps.jumpT = 0;
-    ps.inputBuffer = 0;
-    if (ps.tgtXTimer) clearTimeout(ps.tgtXTimer);
-    ps.tgtX = dir * (cfg.BW / 2 - 0.3);
-    ps.tgtXTimer = setTimeout(function() { ps.tgtX = 0; ps.tgtXTimer = null; }, 350);
-  }
-
   // ---- Game control ----
   function startGame() {
     var cfg = PONTE.config;
     var introState = PONTE.intro.getState();
 
-    // Check if this is split-screen 2P
-    if (introState.gameMode === 2) {
-      startSplitGame();
-      return;
-    }
+    // 2P mode is now handled by split.html (iframe-based)
+    // If gameMode === 2, intro.js will redirect to split.html
 
     document.getElementById('start-screen').classList.add('hidden');
     document.getElementById('game-over').classList.add('hidden');
@@ -229,130 +213,55 @@
     setTimeout(function() { PONTE.ui.getHintEl().style.opacity = '0'; }, 3500);
   }
 
-  // ---- Split-screen game start ----
-  function startSplitGame() {
+  /** Auto-start for iframe split-screen mode (skips intro) */
+  function startGameDirect(playerName) {
     var cfg = PONTE.config;
-    var introState = PONTE.intro.getState();
-
-    splitMode = true;
-    PONTE.scene.splitMode = true;
 
     document.getElementById('start-screen').classList.add('hidden');
     document.getElementById('game-over').classList.add('hidden');
     document.getElementById('win-screen').classList.add('hidden');
     document.getElementById('turn-screen').classList.add('hidden');
-    document.getElementById('result-screen').classList.add('hidden');
-    document.getElementById('hud-wrap').classList.add('hidden-hud');
+    document.getElementById('hud-wrap').classList.remove('hidden-hud');
+    PONTE.ui.enableTouch();
+
+    PONTE.bridge.reset();
+
+    state.zPos = 0; state.tgtX = 0; state.curX = 0;
+    state.stakes = cfg.ISTAKES; state.coins = 0; state.bonusC = 0;
+    PONTE.player.resetPileCount();
+    state.falling = false; state.jumping = false;
+    PONTE.input.clearBuffer();
+    if (state.tgtXTimer) { clearTimeout(state.tgtXTimer); state.tgtXTimer = null; }
+    if (state.winTimer) { clearTimeout(state.winTimer); state.winTimer = null; }
+    state.winTriggered = false; state.winFinalScore = 0; state.winElapsed = 0;
     var skipBtn = document.getElementById('skip-btn');
     if (skipBtn) skipBtn.classList.add('hidden');
 
-    // Hide 1P controls hint
-    PONTE.ui.getHintEl().style.opacity = '0';
-
-    // Update camera aspects for split
-    var halfW = window.innerWidth / 2;
-    var cam1 = PONTE.scene.camera;
-    var cam2 = PONTE.scene.camera2;
-    cam1.aspect = halfW / window.innerHeight;
-    cam1.updateProjectionMatrix();
-    cam2.aspect = halfW / window.innerHeight;
-    cam2.updateProjectionMatrix();
-
-    // Clean up old celebration/effects
     PONTE.effects.reset();
     PONTE.effects.setFarmRewardSpawned(0);
+    PONTE.gates.passed = {};
 
-    // Hide original 1P player
-    PONTE.player.group.visible = false;
+    PONTE.ui.getPlayerNameEl().textContent = playerName;
 
-    // Reset old bridge
-    PONTE.bridge.reset();
-    // Hide the 1P bridge group (we'll use separate ones)
-    PONTE.bridge.group.visible = false;
+    var pipsHtml = '';
+    for (var pi = 0; pi < 5; pi++) pipsHtml += '<span class="pip"></span>';
+    PONTE.ui.getPipsEl().innerHTML = pipsHtml;
 
-    // Ensure bridge materials are ready
-    PONTE.bridge.ensureMaterials();
+    var banner = document.getElementById('player-turn-banner');
+    if (banner) banner.style.display = 'none';
 
-    // Rebuild gates in split mode
-    PONTE.gates.rebuild();
+    PONTE.player.group.position.set(0, 0, 0);
+    PONTE.player.group.rotation.set(0, 0, 0);
 
-    // Create player objects
-    p1Obj = PONTE.player.makeColored(0x1565C0); // Blue
-    p2Obj = PONTE.player.makeColored(0xE65100); // Orange
-
-    // Create bridge states
-    p1Bridge = PONTE.bridge.createBridgeState(P1_OFFSET_X);
-    p2Bridge = PONTE.bridge.createBridgeState(P2_OFFSET_X);
-
-    // Create player states
-    p1State = makePlayerState();
-    p1State.stakes = cfg.ISTAKES;
-    p2State = makePlayerState();
-    p2State.stakes = cfg.ISTAKES;
-
-    // Create start platforms for each bridge
-    _makeStartPlatform(P1_OFFSET_X);
-    _makeStartPlatform(P2_OFFSET_X);
-
-    // Position players on their bridges
-    p1Obj.group.position.set(P1_OFFSET_X, 0, 0);
-    p2Obj.group.position.set(P2_OFFSET_X, 0, 0);
-
-    // Build initial bridge segments
-    PONTE.bridge.buildToFor(-15, false, p1State, p1Bridge);
-    PONTE.bridge.buildToFor(-15, false, p2State, p2Bridge);
-
-    // Create split HUDs
-    PONTE.ui.initSplitHuds(introState.player1Name, introState.player2Name);
-    PONTE.ui.updateSplitHud('p1', p1State, p1Obj);
-    PONTE.ui.updateSplitHud('p2', p2State, p2Obj);
-
-    // Init split input
-    PONTE.input.initSplit(
-      function(dir) { moveP1(dir); },
-      function(dir) { moveP2(dir); }
-    );
-    PONTE.input.enableSplitTouch();
-
-    // Divider line
-    _createDivider();
-
-    splitRunning = true;
+    PONTE.bridge.buildTo(-15);
+    PONTE.ui.update(state);
+    state.running = true;
     PONTE.scene.clock.start();
-  }
 
-  var _splitStartPlatforms = [];
-  function _makeStartPlatform(offsetX) {
-    var scene = PONTE.scene.scene;
-    var top = new THREE.Mesh(
-      new THREE.BoxGeometry(12, 1, 20),
-      new THREE.MeshStandardMaterial({ color: 0x7CB342, roughness: 0.85 })
-    );
-    top.position.set(offsetX, -0.5, 5);
-    top.receiveShadow = true;
-    scene.add(top);
-    _splitStartPlatforms.push(top);
+    setTimeout(function() { PONTE.ui.getHintEl().style.opacity = '0'; }, 3500);
 
-    var dirt = new THREE.Mesh(
-      new THREE.BoxGeometry(12, 3, 20),
-      new THREE.MeshStandardMaterial({ color: 0x6D4C41, roughness: 0.9 })
-    );
-    dirt.position.set(offsetX, -2.5, 5);
-    scene.add(dirt);
-    _splitStartPlatforms.push(dirt);
-  }
-
-  var _dividerEl = null;
-  function _createDivider() {
-    if (_dividerEl) _dividerEl.remove();
-    _dividerEl = document.createElement('div');
-    _dividerEl.id = 'split-divider';
-    _dividerEl.style.cssText = 'position:absolute;left:50%;top:0;width:3px;height:100%;background:rgba(255,255,255,0.3);z-index:20;pointer-events:none;transform:translateX(-50%)';
-    document.getElementById('ui').appendChild(_dividerEl);
-  }
-
-  function _removeDivider() {
-    if (_dividerEl) { _dividerEl.remove(); _dividerEl = null; }
+    // Start render loop
+    loop();
   }
 
   // ---- Ranking with pagination ----
@@ -406,6 +315,32 @@
 
   function handleGameEnd(finalScore, won) {
     PONTE.effects.clearFloats();
+
+    // If running inside an iframe (split-screen mode), post message to parent
+    if (PONTE._iframePlayer) {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'gameEnd', score: finalScore, won: won }, '*');
+      }
+      // Still show end screen in iframe
+      if (won) {
+        document.getElementById('win-score').textContent = finalScore;
+        document.getElementById('win-screen').classList.remove('hidden');
+      } else {
+        document.getElementById('final-score').textContent = finalScore;
+        document.getElementById('game-over').classList.remove('hidden');
+      }
+      // Hide restart buttons in iframe mode
+      var restartBtn = document.getElementById('restart-btn');
+      var winBtn = document.getElementById('win-btn');
+      var retryBtn = document.getElementById('retry-btn');
+      var winRetryBtn = document.getElementById('win-retry-btn');
+      if (restartBtn) restartBtn.style.display = 'none';
+      if (winBtn) winBtn.style.display = 'none';
+      if (retryBtn) retryBtn.style.display = 'none';
+      if (winRetryBtn) winRetryBtn.style.display = 'none';
+      return;
+    }
+
     var introState = PONTE.intro.getState();
     var curName = introState.currentPlayer === 1 ? introState.player1Name : introState.player2Name;
     var curDoc = introState.currentPlayer === 1 ? introState.player1Doc : introState.player2Doc;
@@ -433,65 +368,6 @@
     }
   }
 
-  // ---- Split-screen end handling ----
-  function handleSplitEnd() {
-    splitRunning = false;
-    PONTE.input.disableSplitTouch();
-
-    var introState = PONTE.intro.getState();
-    var p1Score = Math.min(p1State.coins + p1State.bonusC, 10000);
-    var p2Score = Math.min(p2State.coins + p2State.bonusC, 10000);
-
-    // Add win bonus for stakes if they won
-    if (p1State.won) p1Score = Math.min(p1Score + p1State.stakes * 5, 10000);
-    if (p2State.won) p2Score = Math.min(p2Score + p2State.stakes * 5, 10000);
-
-    // Save scores
-    GameStorage.saveScore({
-      playerName: introState.player1Name,
-      playerDoc: introState.player1Doc,
-      score: p1Score,
-      won: p1State.won,
-      gameMode: 2,
-      difficulty: parseInt(document.getElementById('diff-slider').value),
-      speed: parseInt(document.getElementById('speed-slider').value)
-    });
-    GameStorage.saveScore({
-      playerName: introState.player2Name,
-      playerDoc: introState.player2Doc,
-      score: p2Score,
-      won: p2State.won,
-      gameMode: 2,
-      difficulty: parseInt(document.getElementById('diff-slider').value),
-      speed: parseInt(document.getElementById('speed-slider').value)
-    });
-    try { GameSync.pushUnsyncedScores(); } catch(e) {}
-
-    PONTE.intro.setPlayer1Score(p1Score);
-    PONTE.intro.setPlayer2Score(p2Score);
-
-    // Remove split HUDs and divider
-    PONTE.ui.removeSplitHuds();
-    _removeDivider();
-
-    // Show result screen
-    var content = document.getElementById('result-content');
-    content.innerHTML = '<b>' + introState.player1Name + ':</b> ' + p1Score + ' pontos<br>' +
-                        '<b>' + introState.player2Name + ':</b> ' + p2Score + ' pontos';
-    var winner = document.getElementById('result-winner');
-    if (p1Score > p2Score) {
-      winner.textContent = introState.player1Name + ' venceu!';
-      winner.style.color = '#FFD700';
-    } else if (p2Score > p1Score) {
-      winner.textContent = introState.player2Name + ' venceu!';
-      winner.style.color = '#FFD700';
-    } else {
-      winner.textContent = 'Empate!';
-      winner.style.color = '#81C784';
-    }
-    document.getElementById('result-screen').classList.remove('hidden');
-  }
-
   // ---- Main loop ----
   function loop() {
     requestAnimationFrame(loop);
@@ -500,12 +376,6 @@
     var camera = PONTE.scene.camera;
     var renderer = PONTE.scene.renderer;
     var clock = PONTE.scene.clock;
-
-    // ---- Split-screen mode ----
-    if (splitMode) {
-      loopSplit(cfg, scene, camera, renderer, clock);
-      return;
-    }
 
     // ---- 1P mode ----
     if (!state.running) {
@@ -683,178 +553,6 @@
     }
 
     renderer.render(scene, camera);
-  }
-
-  // ---- Split-screen loop ----
-  function loopSplit(cfg, scene, camera, renderer, clock) {
-    var camera2 = PONTE.scene.camera2;
-
-    if (!splitRunning) {
-      // Idle split view
-      camera.position.set(P1_OFFSET_X, 10, 13);
-      camera.lookAt(P1_OFFSET_X, 0, -8);
-      camera2.position.set(P2_OFFSET_X, 10, 13);
-      camera2.lookAt(P2_OFFSET_X, 0, -8);
-      PONTE.scene.renderSplit(scene, camera, camera2);
-      return;
-    }
-
-    var dt = Math.min(clock.getDelta(), 0.05);
-    var elapsed = clock.elapsedTime;
-    var speed = cfg.ISPEED + Math.min(elapsed * 0.5, cfg.MSPEED - cfg.ISPEED);
-
-    // Update both players
-    _updateSplitPlayer(p1State, p1Obj, p1Bridge, P1_OFFSET_X, dt, elapsed, speed, cfg, 0);
-    _updateSplitPlayer(p2State, p2Obj, p2Bridge, P2_OFFSET_X, dt, elapsed, speed, cfg, 1);
-
-    // Update shared systems
-    PONTE.bridge.update(dt);
-    var maxProgress = Math.max(p1State.zPos, p2State.zPos);
-    PONTE.scenery.update(maxProgress / cfg.DIST);
-
-    // Camera for P1
-    if (!p1State.finished) {
-      camera.position.set(P1_OFFSET_X + p1State.curX * 0.12, 12 + Math.sin(elapsed * 0.4) * 0.2, -p1State.zPos + 14);
-      camera.lookAt(P1_OFFSET_X + p1State.curX * 0.15, 1, -p1State.zPos - 10);
-    } else {
-      camera.position.set(P1_OFFSET_X, 10, -p1State.zPos + 14);
-      camera.lookAt(P1_OFFSET_X, 2, -p1State.zPos - 10);
-    }
-
-    // Camera for P2
-    if (!p2State.finished) {
-      camera2.position.set(P2_OFFSET_X + p2State.curX * 0.12, 12 + Math.sin(elapsed * 0.4) * 0.2, -p2State.zPos + 14);
-      camera2.lookAt(P2_OFFSET_X + p2State.curX * 0.15, 1, -p2State.zPos - 10);
-    } else {
-      camera2.position.set(P2_OFFSET_X, 10, -p2State.zPos + 14);
-      camera2.lookAt(P2_OFFSET_X, 2, -p2State.zPos - 10);
-    }
-
-    // Update HUDs
-    PONTE.ui.updateSplitHud('p1', p1State, p1Obj);
-    PONTE.ui.updateSplitHud('p2', p2State, p2Obj);
-
-    // Check if both finished
-    if (p1State.finished && p2State.finished) {
-      handleSplitEnd();
-    }
-
-    // Render split
-    PONTE.scene.renderSplit(scene, camera, camera2);
-  }
-
-  function _updateSplitPlayer(ps, pObj, bState, offsetX, dt, elapsed, speed, cfg, playerIdx) {
-    if (ps.finished) return;
-
-    // Speed
-    var curSpeed = speed;
-    if (ps.zPos > PONTE.gates.lastGateEnd) {
-      curSpeed = Math.min(curSpeed, cfg.ISPEED * 0.7);
-    }
-
-    if (ps.falling) return; // fall animation handles itself
-
-    ps.zPos += curSpeed * dt;
-    ps.curX += (ps.tgtX - ps.curX) * 12 * dt;
-
-    // Jump
-    if (ps.jumping) {
-      ps.jumpT += dt;
-      var p = Math.min(ps.jumpT / 0.3, 1);
-      ps.baseY = Math.sin(p * Math.PI) * 1.0;
-      if (p >= 1) {
-        ps.jumping = false; ps.baseY = 0;
-        if (ps.inputBuffer !== 0) {
-          executeMoveFor(ps, ps.inputBuffer);
-        }
-      }
-    }
-
-    // Position player
-    pObj.group.position.set(offsetX + ps.curX, ps.baseY, -ps.zPos);
-    PONTE.player.animateLimbsOn(pObj.group, elapsed, ps.jumping);
-
-    // Build bridge
-    var pastAllGates = ps.zPos > PONTE.gates.lastGateEnd;
-    var bridgeLimit = -(cfg.DIST);
-    if (bState.lastPZ > -ps.zPos - 18 && bState.lastPZ > bridgeLimit && (ps.stakes > 0 || pastAllGates)) {
-      var target = Math.max(-ps.zPos - 18, bridgeLimit);
-      PONTE.bridge.buildToFor(target, pastAllGates, ps, bState);
-    }
-
-    // On bridge check
-    var pz = -ps.zPos;
-    var onB = PONTE.bridge.isOnBridgeFor(pz, bState);
-
-    if (!onB && !ps.falling && !ps.jumping) {
-      ps.falling = true;
-      ps.running = false;
-      ps.won = false;
-      // Fall animation
-      var ft = 0;
-      var fy0 = pObj.group.position.y;
-      var scene = PONTE.scene.scene;
-      var fallFn = function() {
-        ft += 0.018;
-        pObj.group.position.y = fy0 - ft * ft * 35;
-        pObj.group.rotation.x += 0.12;
-        pObj.group.rotation.z += 0.06;
-        if (pObj.group.position.y > -18) {
-          requestAnimationFrame(fallFn);
-        } else {
-          ps.finished = true;
-        }
-      };
-      fallFn();
-      return;
-    }
-
-    // Gate check (only check gates for this player's bridge)
-    var gates = PONTE.gates.list;
-    for (var i = 0; i < gates.length; i++) {
-      var gate = gates[i];
-      if (gate.bridge !== playerIdx) continue;
-      var passKey = (playerIdx === 0 ? 'p1' : 'p2') + '-' + gate.idx + '-' + gate.side;
-      if (ps.passed[passKey]) continue;
-      var dz = Math.abs(-ps.zPos - gate.z);
-      if (dz < 1.8) {
-        var onLeft = ps.curX < -1;
-        var onRight = ps.curX > 1;
-        if ((gate.side === 'left' && onLeft) || (gate.side === 'right' && onRight)) {
-          ps.passed[(playerIdx === 0 ? 'p1' : 'p2') + '-' + gate.idx + '-left'] = true;
-          ps.passed[(playerIdx === 0 ? 'p1' : 'p2') + '-' + gate.idx + '-right'] = true;
-          if (gate.value > 0) {
-            ps.stakes += gate.value;
-            ps.bonusC += gate.value * 4;
-          } else {
-            ps.stakes = Math.max(0, ps.stakes + gate.value);
-          }
-          gate.mesh.children[0].material.opacity = 0.2;
-          break;
-        }
-      }
-    }
-
-    // Auto-pass old gates
-    for (var i = 0; i < gates.length; i++) {
-      var gate = gates[i];
-      if (gate.bridge !== playerIdx) continue;
-      var autoKey = (playerIdx === 0 ? 'p1' : 'p2') + '-' + gate.idx + '-left';
-      if (!ps.passed[autoKey] && -ps.zPos < gate.z - 3) {
-        ps.passed[(playerIdx === 0 ? 'p1' : 'p2') + '-' + gate.idx + '-left'] = true;
-        ps.passed[(playerIdx === 0 ? 'p1' : 'p2') + '-' + gate.idx + '-right'] = true;
-      }
-    }
-
-    // Win check
-    if (ps.zPos >= cfg.DIST && !ps.winTriggered) {
-      ps.winTriggered = true;
-      ps.won = true;
-      ps.bonusC += ps.stakes * 5;
-      ps.zPos = cfg.DIST;
-      pObj.group.position.set(offsetX + ps.curX, ps.baseY, -ps.zPos);
-      ps.finished = true;
-    }
   }
 
   // ---- Expose API ----

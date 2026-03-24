@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>MNNO Games - A Ponte da Produtividade - 2 Jogadores</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap">
+<style>
+  @font-face {
+    font-family: 'FuturaCond';
+    src: url('assets/Futura Condensed Extra Bold.otf') format('opentype');
+    font-weight: 800;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    overflow: hidden;
+    background: #000;
+    font-family: 'DM Sans', 'Segoe UI', sans-serif;
+    touch-action: none;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+  }
+  .player-half {
+    flex: 1;
+    position: relative;
+    height: 100vh;
+  }
+  .player-half iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+  }
+  #divider {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: 4px;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.4);
+    z-index: 20;
+    transform: translateX(-50%);
+    pointer-events: none;
+    box-shadow: 0 0 12px rgba(255, 255, 255, 0.2);
+  }
+  .player-label {
+    position: absolute;
+    top: 8px;
+    z-index: 25;
+    font-family: 'FuturaCond', sans-serif;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 6px 16px;
+    border-radius: 20px;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    pointer-events: none;
+  }
+  #label-p1 {
+    left: 12px;
+    color: #64B5F6;
+    border: 1px solid rgba(100, 181, 246, 0.3);
+  }
+  #label-p2 {
+    right: 12px;
+    color: #FF8A65;
+    border: 1px solid rgba(255, 138, 101, 0.3);
+  }
+  .controls-label {
+    position: absolute;
+    bottom: 12px;
+    z-index: 25;
+    font-family: 'FuturaCond', sans-serif;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 14px;
+    background: rgba(0, 0, 0, 0.5);
+    color: rgba(255, 255, 255, 0.5);
+    pointer-events: none;
+  }
+  #controls-p1 { left: 12px; }
+  #controls-p2 { right: 12px; }
+
+  /* Result overlay */
+  #result-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: rgba(0, 0, 0, 0.85);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+  #result-overlay.visible {
+    display: flex;
+  }
+  .result-title {
+    font-family: 'FuturaCond', sans-serif;
+    font-size: clamp(32px, 6vw, 52px);
+    font-weight: 800;
+    color: #fff;
+    text-shadow: 0 4px 25px rgba(0, 0, 0, 0.35);
+    margin-bottom: 24px;
+    text-align: center;
+    letter-spacing: 0;
+  }
+  .result-scores {
+    display: flex;
+    gap: 40px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .result-player {
+    text-align: center;
+    min-width: 160px;
+  }
+  .result-player-name {
+    font-family: 'FuturaCond', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+  .result-player-score {
+    font-family: 'Syne', sans-serif;
+    font-size: 56px;
+    font-weight: 900;
+    line-height: 1;
+  }
+  .result-player-status {
+    font-family: 'FuturaCond', sans-serif;
+    font-size: 14px;
+    margin-top: 4px;
+    opacity: 0.6;
+  }
+  .result-winner {
+    font-family: 'FuturaCond', sans-serif;
+    font-size: clamp(24px, 4vw, 36px);
+    font-weight: 800;
+    color: #FFD700;
+    text-shadow: 0 2px 15px rgba(255, 215, 0, 0.3);
+    margin-bottom: 28px;
+  }
+  .result-btn {
+    background: linear-gradient(180deg, #f0f5c4 0%, #e6eeaa 100%);
+    color: #0d30e1;
+    border: none;
+    padding: 16px 50px;
+    font-family: 'FuturaCond', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    border-radius: 40px;
+    cursor: pointer;
+    box-shadow: 0 6px 0 #a8d830, 0 8px 20px rgba(0, 0, 0, 0.3);
+    transition: transform 0.12s, box-shadow 0.12s;
+    letter-spacing: 0;
+    text-transform: uppercase;
+  }
+  .result-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 0 #a8d830, 0 10px 25px rgba(0, 0, 0, 0.3);
+  }
+  .result-btn:active {
+    transform: translateY(4px);
+    box-shadow: 0 2px 0 #a8d830, 0 4px 10px rgba(0, 0, 0, 0.3);
+  }
+  #res-retry:hover { background: rgba(255,255,255,0.25); transform: scale(1.1); }
+  #res-retry:active { transform: scale(0.95); background: rgba(255,255,255,0.3); }
+</style>
+</head>
+<body>
+
+<div class="player-half" id="half-p1">
+  <span class="player-label" id="label-p1">J1</span>
+  <span class="controls-label" id="controls-p1">Teclas A / D</span>
+  <iframe id="iframe-p1"></iframe>
+</div>
+
+<div id="divider"></div>
+
+<div class="player-half" id="half-p2">
+  <span class="player-label" id="label-p2">J2</span>
+  <span class="controls-label" id="controls-p2">Setas ← / →</span>
+  <iframe id="iframe-p2"></iframe>
+</div>
+
+<div id="result-overlay">
+  <div class="result-title">RESULTADO FINAL</div>
+  <div class="result-scores">
+    <div class="result-player">
+      <div class="result-player-name" id="res-p1-name" style="color:#64B5F6">Jogador 1</div>
+      <div class="result-player-score" id="res-p1-score" style="color:#64B5F6">0</div>
+      <div class="result-player-status" id="res-p1-status"></div>
+    </div>
+    <div class="result-player">
+      <div class="result-player-name" id="res-p2-name" style="color:#FF8A65">Jogador 2</div>
+      <div class="result-player-score" id="res-p2-score" style="color:#FF8A65">0</div>
+      <div class="result-player-status" id="res-p2-status"></div>
+    </div>
+  </div>
+  <div class="result-winner" id="res-winner"></div>
+  <div style="display:flex;align-items:center;justify-content:center;gap:12px">
+    <button class="result-btn" id="res-play-again">JOGAR NOVAMENTE</button>
+    <button id="res-retry" title="Reiniciar sem cadastrar" style="width:56px;height:56px;border-radius:50%;border:none;background:rgba(255,255,255,0.15);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);transition:transform 0.12s,background 0.2s;box-shadow:0 4px 12px rgba(0,0,0,0.3)">
+      <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // Parse URL params
+  var params = new URLSearchParams(window.location.search);
+  var p1name = params.get('p1name') || 'Jogador 1';
+  var p1doc = params.get('p1doc') || '';
+  var p2name = params.get('p2name') || 'Jogador 2';
+  var p2doc = params.get('p2doc') || '';
+  var speed = params.get('speed') || '2';
+  var difficulty = params.get('difficulty') || '2';
+
+  // Update labels
+  document.getElementById('label-p1').textContent = p1name;
+  document.getElementById('label-p2').textContent = p2name;
+
+  // Build iframe URLs
+  var base = 'index.html';
+  var p1params = new URLSearchParams();
+  p1params.set('player', p1name);
+  p1params.set('doc', p1doc);
+  p1params.set('controls', 'ad');
+  p1params.set('speed', speed);
+  p1params.set('difficulty', difficulty);
+
+  var p2params = new URLSearchParams();
+  p2params.set('player', p2name);
+  p2params.set('doc', p2doc);
+  p2params.set('controls', 'arrows');
+  p2params.set('speed', speed);
+  p2params.set('difficulty', difficulty);
+
+  var iframe1 = document.getElementById('iframe-p1');
+  var iframe2 = document.getElementById('iframe-p2');
+  iframe1.src = base + '?' + p1params.toString();
+  iframe2.src = base + '?' + p2params.toString();
+
+  // Prevent iframes from stealing focus — keep focus on parent so keydown works
+  iframe1.addEventListener('load', function() {
+    iframe1.contentWindow.addEventListener('focus', function() { window.focus(); });
+    iframe1.contentWindow.addEventListener('click', function() { window.focus(); });
+  });
+  iframe2.addEventListener('load', function() {
+    iframe2.contentWindow.addEventListener('focus', function() { window.focus(); });
+    iframe2.contentWindow.addEventListener('click', function() { window.focus(); });
+  });
+  // Also refocus if user clicks on an iframe
+  iframe1.addEventListener('mouseenter', function() { window.focus(); });
+  iframe2.addEventListener('mouseenter', function() { window.focus(); });
+
+  // Track results
+  var p1Result = null;
+  var p2Result = null;
+
+  window.addEventListener('message', function(e) {
+    if (!e.data || e.data.type !== 'gameEnd') return;
+
+    // Determine which iframe sent the message
+    if (e.source === iframe1.contentWindow) {
+      p1Result = { score: e.data.score, won: e.data.won };
+    } else if (e.source === iframe2.contentWindow) {
+      p2Result = { score: e.data.score, won: e.data.won };
+    }
+
+    // Check if both finished
+    if (p1Result && p2Result) {
+      showResults();
+    }
+  });
+
+  function showResults() {
+    var overlay = document.getElementById('result-overlay');
+    document.getElementById('res-p1-name').textContent = p1name;
+    document.getElementById('res-p2-name').textContent = p2name;
+    document.getElementById('res-p1-score').textContent = p1Result.score;
+    document.getElementById('res-p2-score').textContent = p2Result.score;
+    document.getElementById('res-p1-status').textContent = p1Result.won ? 'Chegou na lavoura!' : 'Ponte quebrou';
+    document.getElementById('res-p2-status').textContent = p2Result.won ? 'Chegou na lavoura!' : 'Ponte quebrou';
+
+    var winner = document.getElementById('res-winner');
+    if (p1Result.score > p2Result.score) {
+      winner.textContent = p1name + ' venceu!';
+    } else if (p2Result.score > p1Result.score) {
+      winner.textContent = p2name + ' venceu!';
+    } else {
+      winner.textContent = 'Empate!';
+      winner.style.color = '#81C784';
+    }
+
+    overlay.classList.add('visible');
+  }
+
+  // Forward keyboard to correct iframe
+  function handleKey(e) {
+    var key = e.key;
+    if (key === 'a' || key === 'A' || key === 'd' || key === 'D') {
+      try { iframe1.contentWindow.postMessage({ type: 'keydown', key: key }, '*'); } catch(ex) {}
+    }
+    if (key === 'ArrowLeft' || key === 'ArrowRight') {
+      if (e.preventDefault) e.preventDefault();
+      try { iframe2.contentWindow.postMessage({ type: 'keydown', key: key }, '*'); } catch(ex) {}
+    }
+  }
+
+  // Listen on parent
+  document.addEventListener('keydown', handleKey);
+
+  // Also inject listeners into iframes once loaded (in case they steal focus)
+  function injectKeyForwarder(iframe) {
+    try {
+      iframe.contentWindow.document.addEventListener('keydown', function(e) {
+        handleKey(e);
+      });
+    } catch(ex) {}
+  }
+  iframe1.addEventListener('load', function() { injectKeyForwarder(iframe1); });
+  iframe2.addEventListener('load', function() { injectKeyForwarder(iframe2); });
+
+  document.getElementById('res-play-again').addEventListener('click', function() {
+    window.location.href = 'index.html';
+  });
+
+  document.getElementById('res-retry').addEventListener('click', function() {
+    p1Result = null;
+    p2Result = null;
+    document.getElementById('result-overlay').classList.remove('visible');
+    iframe1.src = iframe1.src;
+    iframe2.src = iframe2.src;
+  });
+})();
+</script>
+
+</body>
+</html>

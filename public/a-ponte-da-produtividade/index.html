@@ -120,7 +120,12 @@
   <div class="score-label">Sua pontuação</div>
   <div id="final-score" class="big-score">0</div>
   <div id="ranking-gameover" class="ranking-box"></div>
-  <button class="btn" id="restart-btn" style="margin-top:16px">TENTAR NOVAMENTE</button>
+  <div class="end-buttons" style="margin-top:16px">
+    <button class="btn" id="restart-btn">JOGAR NOVAMENTE</button>
+    <button class="btn-retry" id="retry-btn" title="Reiniciar sem cadastrar">
+      <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+    </button>
+  </div>
 </div>
 
 <div id="win-screen" class="overlay hidden">
@@ -128,7 +133,12 @@
   <div id="win-score" class="big-score">0</div>
   <div class="screen-sub">Você chegou à lavoura com máxima produtividade!</div>
   <div id="ranking-win" class="ranking-box"></div>
-  <button class="btn" id="win-btn">JOGAR NOVAMENTE</button>
+  <div class="end-buttons" style="margin-top:16px">
+    <button class="btn" id="win-btn">JOGAR NOVAMENTE</button>
+    <button class="btn-retry" id="win-retry-btn" title="Reiniciar sem cadastrar">
+      <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+    </button>
+  </div>
 </div>
 
 <!-- Tela entre turnos (2 jogadores) -->
@@ -143,7 +153,12 @@
   <div class="screen-title">RESULTADO FINAL</div>
   <div id="result-content" style="margin:20px 0;text-align:center;color:#fff;font-size:18px;line-height:2"></div>
   <div id="result-winner" class="big-score" style="font-size:28px"></div>
-  <button class="btn" id="result-btn" style="margin-top:20px">JOGAR NOVAMENTE</button>
+  <div class="end-buttons" style="margin-top:20px">
+    <button class="btn" id="result-btn">JOGAR NOVAMENTE</button>
+    <button class="btn-retry" id="result-retry-btn" title="Reiniciar sem cadastrar">
+      <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+    </button>
+  </div>
 </div>
 
 <script src="js/boot.js"></script>

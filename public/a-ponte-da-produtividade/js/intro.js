@@ -58,6 +58,16 @@
     document.getElementById('start-btn').addEventListener('click', tryStart);
     document.getElementById('restart-btn').addEventListener('click', function(){ location.reload(); });
     document.getElementById('win-btn').addEventListener('click', function(){ location.reload(); });
+    document.getElementById('retry-btn').addEventListener('click', function(){
+      document.getElementById('game-over').classList.add('hidden');
+      PONTE.gates.rebuild();
+      PONTE.game.start();
+    });
+    document.getElementById('win-retry-btn').addEventListener('click', function(){
+      document.getElementById('win-screen').classList.add('hidden');
+      PONTE.gates.rebuild();
+      PONTE.game.start();
+    });
 
     // Turn and result screen buttons
     document.getElementById('turn-btn').addEventListener('click', function(){
@@ -67,6 +77,12 @@
       PONTE.game.start();
     });
     document.getElementById('result-btn').addEventListener('click', function(){ location.reload(); });
+    document.getElementById('result-retry-btn').addEventListener('click', function(){
+      document.getElementById('result-screen').classList.add('hidden');
+      currentPlayer = 1;
+      PONTE.gates.rebuild();
+      PONTE.game.start();
+    });
 
     // Slider labels
     var speedNames = ['', 'Lento', 'Normal', 'Rápido'];
@@ -139,6 +155,27 @@
     var speedLevel = parseInt(document.getElementById('speed-slider').value);
     var diffLevel = parseInt(document.getElementById('diff-slider').value);
 
+    // Save players to local storage
+    GameStorage.savePlayer(player1Name, player1Doc);
+    if (gameMode === 2) GameStorage.savePlayer(player2Name, player2Doc);
+
+    // Save config
+    GameStorage.saveConfig({ speed: speedLevel, difficulty: diffLevel });
+
+    // 2P mode: redirect to split.html with all config via URL params
+    if (gameMode === 2) {
+      var params = new URLSearchParams();
+      params.set('p1name', player1Name);
+      params.set('p1doc', player1Doc);
+      params.set('p2name', player2Name);
+      params.set('p2doc', player2Doc);
+      params.set('speed', speedLevel);
+      params.set('difficulty', diffLevel);
+      window.location.href = 'split.html?' + params.toString();
+      return;
+    }
+
+    // 1P mode: apply config and start
     cfg.ISPEED = [0, 10, 14, 20][speedLevel];
     cfg.MSPEED = [0, 22, 32, 45][speedLevel];
 
@@ -163,13 +200,6 @@
     currentPlayer = 1;
     player1Score = 0;
     player2Score = 0;
-
-    // Save players to local storage
-    GameStorage.savePlayer(player1Name, player1Doc);
-    if (gameMode === 2) GameStorage.savePlayer(player2Name, player2Doc);
-
-    // Save config
-    GameStorage.saveConfig({ speed: speedLevel, difficulty: diffLevel });
 
     PONTE.farm.buildEndScene();
     PONTE.gates.rebuild();

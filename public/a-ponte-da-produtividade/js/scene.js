@@ -1,7 +1,7 @@
 (function() {
   'use strict';
 
-  var _scene, _camera, _camera2, _renderer, _clock;
+  var _scene, _camera, _renderer, _clock;
 
   function init() {
     _scene = new THREE.Scene();
@@ -9,7 +9,6 @@
     _scene.fog = new THREE.Fog(0x7EC8E3, 80, 500);
 
     _camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 800);
-    _camera2 = new THREE.PerspectiveCamera(55, (window.innerWidth / 2) / window.innerHeight, 0.1, 800);
     _renderer = new THREE.WebGLRenderer({ antialias: true });
     _renderer.setSize(window.innerWidth, window.innerHeight);
     _renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -59,56 +58,22 @@
 
     PONTE.scene.scene = _scene;
     PONTE.scene.camera = _camera;
-    PONTE.scene.camera2 = _camera2;
     PONTE.scene.renderer = _renderer;
     PONTE.scene.clock = _clock;
   }
 
   function onResize() {
-    var isSplit = PONTE.scene.splitMode;
-    if (isSplit) {
-      var halfW = window.innerWidth / 2;
-      _camera.aspect = halfW / window.innerHeight;
-      _camera.updateProjectionMatrix();
-      _camera2.aspect = halfW / window.innerHeight;
-      _camera2.updateProjectionMatrix();
-    } else {
-      _camera.aspect = window.innerWidth / window.innerHeight;
-      _camera.updateProjectionMatrix();
-    }
+    _camera.aspect = window.innerWidth / window.innerHeight;
+    _camera.updateProjectionMatrix();
     _renderer.setSize(window.innerWidth, window.innerHeight);
-  }
-
-  /** Render split-screen: left half with cam1, right half with cam2 */
-  function renderSplit(scene, cam1, cam2) {
-    var w = window.innerWidth * _renderer.getPixelRatio();
-    var h = window.innerHeight * _renderer.getPixelRatio();
-    var halfW = Math.floor(w / 2);
-
-    _renderer.setScissorTest(true);
-
-    // Left half — Player 1
-    _renderer.setViewport(0, 0, halfW, h);
-    _renderer.setScissor(0, 0, halfW, h);
-    _renderer.render(scene, cam1);
-
-    // Right half — Player 2
-    _renderer.setViewport(halfW, 0, w - halfW, h);
-    _renderer.setScissor(halfW, 0, w - halfW, h);
-    _renderer.render(scene, cam2);
-
-    _renderer.setScissorTest(false);
   }
 
   PONTE.scene = {
     init: init,
-    renderSplit: renderSplit,
     scene: null,
     camera: null,
-    camera2: null,
     renderer: null,
-    clock: null,
-    splitMode: false
+    clock: null
   };
 
 })();

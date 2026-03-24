@@ -43,42 +43,6 @@
     PONTE.player.group = playerGroup;
   }
 
-  /** Create a player with a specific body color, returns { group, stakesPileGroup, lastPileCount } */
-  function makeColored(bodyColor) {
-    var scene = PONTE.scene.scene;
-    var grp = new THREE.Group();
-    var bMat = new THREE.MeshStandardMaterial({ color: bodyColor, roughness: 0.45 });
-    var sMat = new THREE.MeshStandardMaterial({ color: 0xFFCC80, roughness: 0.55 });
-    var hMat = new THREE.MeshStandardMaterial({ color: 0x795548, roughness: 0.6 });
-    var lMat = new THREE.MeshStandardMaterial({ color: 0x33691E, roughness: 0.7 });
-
-    var parts = [
-      { g: new THREE.CylinderGeometry(0.28,0.24,0.65,10), m: bMat, p:[0,0.72,0] },
-      { g: new THREE.SphereGeometry(0.22,12,10), m: sMat, p:[0,1.2,0] },
-      { g: new THREE.CylinderGeometry(0.32,0.34,0.05,12), m: hMat, p:[0,1.36,0] },
-      { g: new THREE.CylinderGeometry(0.16,0.2,0.22,10), m: hMat, p:[0,1.48,0] },
-      { g: new THREE.CylinderGeometry(0.09,0.09,0.4,6), m: lMat, p:[-0.12,0.2,0] },
-      { g: new THREE.CylinderGeometry(0.09,0.09,0.4,6), m: lMat, p:[0.12,0.2,0] },
-      { g: new THREE.CylinderGeometry(0.06,0.06,0.48,6), m: bMat, p:[-0.34,0.72,0], r:[0,0,0.25] },
-      { g: new THREE.CylinderGeometry(0.06,0.06,0.48,6), m: bMat, p:[0.34,0.72,0], r:[0,0,-0.25] }
-    ];
-
-    for (var i = 0; i < parts.length; i++) {
-      var mesh = new THREE.Mesh(parts[i].g, parts[i].m);
-      mesh.position.set(parts[i].p[0], parts[i].p[1], parts[i].p[2]);
-      if (parts[i].r) mesh.rotation.set(parts[i].r[0], parts[i].r[1], parts[i].r[2]);
-      mesh.castShadow = true;
-      grp.add(mesh);
-    }
-
-    var spg = new THREE.Group();
-    spg.position.set(0, 0.4, 0.4);
-    grp.add(spg);
-
-    scene.add(grp);
-    return { group: grp, stakesPileGroup: spg, lastPileCount: -1 };
-  }
-
   var coinModelBase = null;
   var coinReady = false;
   var coinH = 0.1; // actual stacking height of one coin
@@ -177,42 +141,12 @@
     }
   }
 
-  /** Update stakes pile for a specific player object (split-screen) */
-  function updateStakesPileFor(pObj, stakes) {
-    var visualCount = Math.min(stakes, 100);
-    if (visualCount === pObj.lastPileCount) return;
-    pObj.lastPileCount = visualCount;
-
-    while (pObj.stakesPileGroup.children.length > 0) {
-      pObj.stakesPileGroup.remove(pObj.stakesPileGroup.children[0]);
-    }
-    if (visualCount <= 0) return;
-
-    for (var i = 0; i < visualCount; i++) {
-      var coin = makeCoinMesh();
-      coin.position.set(
-        (Math.random() - 0.5) * 0.02,
-        i * coinH,
-        (Math.random() - 0.5) * 0.02
-      );
-      pObj.stakesPileGroup.add(coin);
-    }
-  }
-
   function animateLimbs(elapsed, jumping) {
-    _animateLimbsOn(playerGroup, elapsed, jumping);
-  }
-
-  function _animateLimbsOn(grp, elapsed, jumping) {
     var ls = jumping ? 16 : 9;
-    if (grp.children[4]) grp.children[4].rotation.x = Math.sin(elapsed * ls) * 0.4;
-    if (grp.children[5]) grp.children[5].rotation.x = -Math.sin(elapsed * ls) * 0.4;
-    if (grp.children[6]) grp.children[6].rotation.x = Math.sin(elapsed * ls + 1) * 0.3;
-    if (grp.children[7]) grp.children[7].rotation.x = -Math.sin(elapsed * ls + 1) * 0.3;
-  }
-
-  function animateLimbsOn(grp, elapsed, jumping) {
-    _animateLimbsOn(grp, elapsed, jumping);
+    if (playerGroup.children[4]) playerGroup.children[4].rotation.x = Math.sin(elapsed * ls) * 0.4;
+    if (playerGroup.children[5]) playerGroup.children[5].rotation.x = -Math.sin(elapsed * ls) * 0.4;
+    if (playerGroup.children[6]) playerGroup.children[6].rotation.x = Math.sin(elapsed * ls + 1) * 0.3;
+    if (playerGroup.children[7]) playerGroup.children[7].rotation.x = -Math.sin(elapsed * ls + 1) * 0.3;
   }
 
   function resetPileCount() {
@@ -221,12 +155,9 @@
 
   PONTE.player = {
     make: make,
-    makeColored: makeColored,
     group: null,
     updateStakesPile: updateStakesPile,
-    updateStakesPileFor: updateStakesPileFor,
     animateLimbs: animateLimbs,
-    animateLimbsOn: animateLimbsOn,
     resetPileCount: resetPileCount
   };
 
