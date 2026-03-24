@@ -45,46 +45,62 @@
 
   var coinModelBase = null;
   var coinReady = false;
-  var coinHeight = 0.08; // height of one coin after scaling
+  var coinH = 0.1; // actual stacking height of one coin
+  var coinDiam = 0.5;
 
   function initCoinModel() {
     if (coinReady) return;
     var glb = PONTE.models.get('coin');
     if (!glb) { coinReady = true; return; }
 
-    coinModelBase = glb.scene.clone();
-    var box = new THREE.Box3().setFromObject(coinModelBase);
+    // Wrap in a group so rotation doesn't mess with stacking
+    var wrapper = new THREE.Group();
+    var raw = glb.scene.clone();
+    wrapper.add(raw);
+
+    // Measure raw
+    var box = new THREE.Box3().setFromObject(wrapper);
     var size = new THREE.Vector3();
     box.getSize(size);
 
-    // We want the coin diameter to be ~0.5 units
-    // Find the two largest axes (diameter) and the smallest (thickness)
+    // Scale so diameter is 0.5
     var axes = [size.x, size.y, size.z].sort(function(a, b) { return b - a; });
-    var diameter = axes[0]; // largest = diameter
-    var thickness = axes[2]; // smallest = thickness
-    var s = 0.5 / diameter;
-    coinModelBase.scale.set(s, s, s);
+    coinDiam = 0.5;
+    var s = coinDiam / axes[0];
+    raw.scale.set(s, s, s);
 
-    // Re-measure
-    box.setFromObject(coinModelBase);
+    // Re-measure after scale
+    box.setFromObject(wrapper);
+    size.set(0, 0, 0);
+    box.getSize(size);
+
+    // Find thinnest axis = thickness
+    var sy = size.y, sx = size.x, sz = size.z;
+    if (sy <= sx && sy <= sz) {
+      // Already flat on Y — good
+      coinH = sy;
+    } else if (sx <= sy && sx <= sz) {
+      // Thin on X — rotate
+      raw.rotation.z = Math.PI / 2;
+      coinH = sx;
+    } else {
+      // Thin on Z — rotate
+      raw.rotation.x = Math.PI / 2;
+      coinH = sz;
+    }
+
+    // Re-measure after rotation and center at bottom
+    box.setFromObject(wrapper);
     var center = new THREE.Vector3();
     box.getCenter(center);
-    coinModelBase.position.set(-center.x, -box.min.y, -center.z);
+    raw.position.x -= center.x;
+    raw.position.y -= box.min.y;
+    raw.position.z -= center.z;
 
-    // Detect orientation: if thickness is along Y, coin is already flat (good for stacking)
-    // If thickness is along X or Z, we need to rotate
-    var scaledSize = new THREE.Vector3();
-    box.getSize(scaledSize);
-    if (scaledSize.x < scaledSize.y && scaledSize.x < scaledSize.z) {
-      // Thin on X — rotate to lay flat
-      coinModelBase.rotation.z = Math.PI / 2;
-    } else if (scaledSize.z < scaledSize.x && scaledSize.z < scaledSize.y) {
-      // Thin on Z — rotate to lay flat
-      coinModelBase.rotation.x = Math.PI / 2;
-    }
-    // If thin on Y, already flat — no rotation needed
+    // Add small gap between coins
+    coinH = Math.max(coinH, 0.06) + 0.02;
 
-    coinHeight = thickness * s + 0.01;
+    coinModelBase = wrapper;
     coinReady = true;
   }
 
@@ -96,13 +112,14 @@
     // Fallback procedural
     if (!stakePileMat) {
       stakePileMat = new THREE.MeshStandardMaterial({ color: 0xFFCC00, metalness: 0.4, roughness: 0.4, emissive: 0xCC9900, emissiveIntensity: 0.4 });
-      stakePileGeo = new THREE.CylinderGeometry(0.25, 0.25, 0.06, 10);
+      stakePileGeo = new THREE.CylinderGeometry(0.25, 0.25, 0.08, 10);
     }
+    coinH = 0.1;
     return new THREE.Mesh(stakePileGeo, stakePileMat);
   }
 
   function updateStakesPile(stakes) {
-    var visualCount = Math.min(stakes, 20);
+    var visualCount = Math.min(stakes, 100);
     if (visualCount === lastPileCount) return;
     lastPileCount = visualCount;
 
@@ -112,12 +129,13 @@
     }
     if (visualCount <= 0) return;
 
+    // Single tall pile
     for (var i = 0; i < visualCount; i++) {
       var coin = makeCoinMesh();
       coin.position.set(
-        (Math.random() - 0.5) * 0.05,
-        i * coinHeight,
-        (Math.random() - 0.5) * 0.03
+        (Math.random() - 0.5) * 0.02,
+        i * coinH,
+        (Math.random() - 0.5) * 0.02
       );
       stakesPileGroup.add(coin);
     }

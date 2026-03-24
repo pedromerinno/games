@@ -64,7 +64,7 @@
       box.setFromObject(farm);
       var center = new THREE.Vector3();
       box.getCenter(center);
-      farm.position.set(-center.x, -box.min.y - 0.5, -cfg.DIST - 12 - center.z);
+      farm.position.set(-center.x, -box.min.y - 1.8, -cfg.DIST - 12 - center.z);
       endGroup.add(farm);
 
       // Save the front edge of the farm (most positive Z after positioning)
