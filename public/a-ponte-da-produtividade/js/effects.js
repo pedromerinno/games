@@ -5,16 +5,34 @@
   var farmRewards = [];
   var farmRewardSpawned = 0;
 
+  var floatTimer = null;
+
   function showFloat(text, color) {
     var elCombo = document.getElementById('combo-text');
+    if (floatTimer) clearTimeout(floatTimer);
+
+    elCombo.style.transition = 'none';
     elCombo.textContent = text;
     elCombo.style.color = color;
     elCombo.style.opacity = '1';
-    elCombo.style.transform = 'translate(-50%,-50%) scale(1.3)';
-    setTimeout(function() {
+    elCombo.style.transform = 'translate(-50%,-50%) scale(0.7)';
+    elCombo.offsetHeight;
+
+    elCombo.style.transition = 'opacity 0.3s, transform 0.3s';
+    elCombo.style.transform = 'translate(-50%,-55%) scale(1)';
+
+    floatTimer = setTimeout(function() {
+      elCombo.style.transition = 'opacity 0.4s, transform 0.4s';
       elCombo.style.opacity = '0';
-      elCombo.style.transform = 'translate(-50%,-50%) scale(0.8)';
-    }, 900);
+      elCombo.style.transform = 'translate(-50%,-70%) scale(0.8)';
+      floatTimer = null;
+    }, 600);
+  }
+
+  function clearFloats() {
+    if (floatTimer) { clearTimeout(floatTimer); floatTimer = null; }
+    var elCombo = document.getElementById('combo-text');
+    if (elCombo) elCombo.style.opacity = '0';
   }
 
   var scatterCoinBase = null;
@@ -136,6 +154,7 @@
 
   PONTE.effects = {
     showFloat: showFloat,
+    clearFloats: clearFloats,
     spawnScatterCoins: spawnScatterCoins,
     updateScatterCoins: updateScatterCoins,
     spawnFarmReward: spawnFarmReward,

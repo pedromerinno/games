@@ -63,15 +63,15 @@
           var plant = new THREE.Group();
 
           // Stem — taller near the farm
-          var stemH = 0.6 + progress * 0.8;
+          var stemH = 1.0 + progress * 1.5;
           var stemMesh = new THREE.Mesh(stemGeo, stemMat);
           stemMesh.scale.y = stemH;
           stemMesh.position.y = stemH * 0.5;
           plant.add(stemMesh);
 
           // Leaves — more and bigger near the farm
-          var numLeaves = progress > 0.7 ? 4 : progress > 0.4 ? 3 : 2;
-          var leafSize = 0.4 + progress * 0.6;
+          var numLeaves = progress > 0.6 ? 5 : progress > 0.3 ? 4 : 3;
+          var leafSize = 0.7 + progress * 1.0;
           for (var li = 0; li < numLeaves; li++) {
             var leaf = new THREE.Mesh(leafGeo, cropMats[(row + pi + li) % cropMats.length]);
             leaf.position.set(
@@ -84,9 +84,9 @@
           }
 
           // Near farm: add extra details (flowers/fruit)
-          if (progress > 0.8) {
+          if (progress > 0.6) {
             var fruitMat = new THREE.MeshStandardMaterial({ color: 0xFFEB3B, roughness: 0.5 });
-            var fruit = new THREE.Mesh(new THREE.SphereGeometry(0.12, 5, 4), fruitMat);
+            var fruit = new THREE.Mesh(new THREE.SphereGeometry(0.2, 5, 4), fruitMat);
             fruit.position.set(0, stemH + numLeaves * leafSize * 0.3, 0);
             plant.add(fruit);
           }
@@ -99,7 +99,7 @@
           crops.push({
             mesh: plant,
             zNorm: Math.abs(pz) / DIST,
-            targetScale: 0.6 + progress * 0.9, // much bigger near the farm
+            targetScale: 0.3 + progress * 2.2, // tiny seedlings at start, big crops near farm
             grown: 0
           });
         }

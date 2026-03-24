@@ -11,6 +11,8 @@
     var scene = PONTE.scene.scene;
     gates = [];
     lastGateEnd = cfg.GSPACE * (cfg.NGATES - 1) + 16 + cfg.GSPACE;
+    var isSplit = PONTE.scene.splitMode;
+
     for (var i = 0; i < cfg.NGATES; i++) {
       var z = -(cfg.GSPACE * i + 16);
       var goodSide = Math.random() > 0.5 ? 'left' : 'right';
@@ -25,43 +27,91 @@
       var hw = cfg.BW / 2 - 0.1;
       var ph = 5.0;
 
-      var leftM = makePanel(lv, lData, lv > 0, hw, ph);
-      leftM.position.set(-hw / 2 - 0.05, 0, z);
-      scene.add(leftM);
-      sceneMeshes.push(leftM);
+      if (isSplit) {
+        // In split-screen, place gates for both bridges
+        // P1 bridge at x = -8, P2 bridge at x = +8
+        var offsets = [-8, 8];
+        for (var oi = 0; oi < offsets.length; oi++) {
+          var ox = offsets[oi];
+          var leftM = makePanel(lv, lData, lv > 0, hw, ph);
+          leftM.position.set(ox - hw / 2 - 0.05, 0, z);
+          scene.add(leftM);
+          sceneMeshes.push(leftM);
 
-      var rightM = makePanel(rv, rData, rv > 0, hw, ph);
-      rightM.position.set(hw / 2 + 0.05, 0, z);
-      scene.add(rightM);
-      sceneMeshes.push(rightM);
+          var rightM = makePanel(rv, rData, rv > 0, hw, ph);
+          rightM.position.set(ox + hw / 2 + 0.05, 0, z);
+          scene.add(rightM);
+          sceneMeshes.push(rightM);
 
-      gates.push({ mesh: leftM, z: z, value: lv, side: 'left', idx: i });
-      gates.push({ mesh: rightM, z: z, value: rv, side: 'right', idx: i });
+          // Store gates - use separate idx keys per bridge to avoid collision
+          var prefix = oi === 0 ? 'p1' : 'p2';
+          gates.push({ mesh: leftM, z: z, value: lv, side: 'left', idx: i, bridge: oi, key: prefix + '-' + i });
+          gates.push({ mesh: rightM, z: z, value: rv, side: 'right', idx: i, bridge: oi, key: prefix + '-' + i });
 
-      // VS chip
-      var vsCv = document.createElement('canvas');
-      vsCv.width = 128; vsCv.height = 128;
-      var vsCtx = vsCv.getContext('2d');
-      vsCtx.beginPath();
-      vsCtx.arc(64, 64, 50, 0, Math.PI * 2);
-      vsCtx.fillStyle = 'rgba(255,210,60,0.15)';
-      vsCtx.fill();
-      vsCtx.strokeStyle = 'rgba(255,210,60,0.3)';
-      vsCtx.lineWidth = 2;
-      vsCtx.stroke();
-      vsCtx.fillStyle = '#ffd966';
-      vsCtx.font = 'bold 32px Syne, sans-serif';
-      vsCtx.textAlign = 'center';
-      vsCtx.textBaseline = 'middle';
-      vsCtx.fillText('VS', 64, 66);
-      var vsTex = new THREE.CanvasTexture(vsCv);
-      var vsChip = new THREE.Mesh(
-        new THREE.PlaneGeometry(0.9, 0.9),
-        new THREE.MeshBasicMaterial({ map: vsTex, transparent: true })
-      );
-      vsChip.position.set(0, ph / 2 + 0.2, 0.15);
-      scene.add(vsChip);
-      sceneMeshes.push(vsChip);
+          // VS chip
+          var vsCv = document.createElement('canvas');
+          vsCv.width = 128; vsCv.height = 128;
+          var vsCtx = vsCv.getContext('2d');
+          vsCtx.beginPath();
+          vsCtx.arc(64, 64, 50, 0, Math.PI * 2);
+          vsCtx.fillStyle = 'rgba(255,210,60,0.15)';
+          vsCtx.fill();
+          vsCtx.strokeStyle = 'rgba(255,210,60,0.3)';
+          vsCtx.lineWidth = 2;
+          vsCtx.stroke();
+          vsCtx.fillStyle = '#ffd966';
+          vsCtx.font = 'bold 32px Syne, sans-serif';
+          vsCtx.textAlign = 'center';
+          vsCtx.textBaseline = 'middle';
+          vsCtx.fillText('VS', 64, 66);
+          var vsTex = new THREE.CanvasTexture(vsCv);
+          var vsChip = new THREE.Mesh(
+            new THREE.PlaneGeometry(0.9, 0.9),
+            new THREE.MeshBasicMaterial({ map: vsTex, transparent: true })
+          );
+          vsChip.position.set(ox, ph / 2 + 0.2, z + 0.15);
+          scene.add(vsChip);
+          sceneMeshes.push(vsChip);
+        }
+      } else {
+        var leftM = makePanel(lv, lData, lv > 0, hw, ph);
+        leftM.position.set(-hw / 2 - 0.05, 0, z);
+        scene.add(leftM);
+        sceneMeshes.push(leftM);
+
+        var rightM = makePanel(rv, rData, rv > 0, hw, ph);
+        rightM.position.set(hw / 2 + 0.05, 0, z);
+        scene.add(rightM);
+        sceneMeshes.push(rightM);
+
+        gates.push({ mesh: leftM, z: z, value: lv, side: 'left', idx: i });
+        gates.push({ mesh: rightM, z: z, value: rv, side: 'right', idx: i });
+
+        // VS chip
+        var vsCv = document.createElement('canvas');
+        vsCv.width = 128; vsCv.height = 128;
+        var vsCtx = vsCv.getContext('2d');
+        vsCtx.beginPath();
+        vsCtx.arc(64, 64, 50, 0, Math.PI * 2);
+        vsCtx.fillStyle = 'rgba(255,210,60,0.15)';
+        vsCtx.fill();
+        vsCtx.strokeStyle = 'rgba(255,210,60,0.3)';
+        vsCtx.lineWidth = 2;
+        vsCtx.stroke();
+        vsCtx.fillStyle = '#ffd966';
+        vsCtx.font = 'bold 32px Syne, sans-serif';
+        vsCtx.textAlign = 'center';
+        vsCtx.textBaseline = 'middle';
+        vsCtx.fillText('VS', 64, 66);
+        var vsTex = new THREE.CanvasTexture(vsCv);
+        var vsChip = new THREE.Mesh(
+          new THREE.PlaneGeometry(0.9, 0.9),
+          new THREE.MeshBasicMaterial({ map: vsTex, transparent: true })
+        );
+        vsChip.position.set(0, ph / 2 + 0.2, z + 0.15);
+        scene.add(vsChip);
+        sceneMeshes.push(vsChip);
+      }
     }
 
     PONTE.gates.list = gates;
