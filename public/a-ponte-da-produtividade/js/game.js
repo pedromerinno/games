@@ -176,6 +176,58 @@
     setTimeout(function() { PONTE.ui.getHintEl().style.opacity = '0'; }, 3500);
   }
 
+  // ── Ranking with pagination ──
+  function renderRanking(containerId, currentDoc) {
+    var container = document.getElementById(containerId);
+    if (!container) return;
+    var allScores = GameStorage.getRankings(200);
+    var perPage = 5;
+    var page = 0;
+    var totalPages = Math.max(1, Math.ceil(allScores.length / perPage));
+
+    // Find current player's position
+    var currentPos = -1;
+    var normDoc = (currentDoc || '').replace(/\D/g, '');
+    for (var i = 0; i < allScores.length; i++) {
+      if (allScores[i].playerDoc === normDoc) { currentPos = i; break; }
+    }
+
+    // Start on the page with the current player
+    if (currentPos >= 0) page = Math.floor(currentPos / perPage);
+
+    function draw() {
+      var start = page * perPage;
+      var items = allScores.slice(start, start + perPage);
+      var html = '<div class="ranking-title">RANKING</div><ul class="ranking-list">';
+      for (var i = 0; i < items.length; i++) {
+        var pos = start + i + 1;
+        var s = items[i];
+        var isCurrent = s.playerDoc === normDoc;
+        html += '<li class="ranking-item' + (isCurrent ? ' current' : '') + '">';
+        html += '<span class="ranking-pos">' + pos + 'º</span>';
+        html += '<span class="ranking-name">' + (s.playerName || 'Jogador') + '</span>';
+        html += '<span class="ranking-score">' + s.score + '</span>';
+        html += '</li>';
+      }
+      if (items.length === 0) {
+        html += '<li class="ranking-item" style="justify-content:center;opacity:0.4">Nenhum resultado</li>';
+      }
+      html += '</ul>';
+      html += '<div class="ranking-pages">';
+      html += '<button id="' + containerId + '-prev" ' + (page <= 0 ? 'disabled' : '') + '>&#8249;</button>';
+      html += '<span>' + (page + 1) + ' / ' + totalPages + '</span>';
+      html += '<button id="' + containerId + '-next" ' + (page >= totalPages - 1 ? 'disabled' : '') + '>&#8250;</button>';
+      html += '</div>';
+      container.innerHTML = html;
+
+      var prevBtn = document.getElementById(containerId + '-prev');
+      var nextBtn = document.getElementById(containerId + '-next');
+      if (prevBtn) prevBtn.addEventListener('click', function() { if (page > 0) { page--; draw(); } });
+      if (nextBtn) nextBtn.addEventListener('click', function() { if (page < totalPages - 1) { page++; draw(); } });
+    }
+    draw();
+  }
+
   function handleGameEnd(finalScore, won) {
     var introState = PONTE.intro.getState();
     var curName = introState.currentPlayer === 1 ? introState.player1Name : introState.player2Name;
@@ -196,9 +248,11 @@
       if (won) {
         document.getElementById('win-score').textContent = finalScore;
         document.getElementById('win-screen').classList.remove('hidden');
+        renderRanking('ranking-win', curDoc);
       } else {
         document.getElementById('final-score').textContent = finalScore;
         document.getElementById('game-over').classList.remove('hidden');
+        renderRanking('ranking-gameover', curDoc);
       }
     } else {
       if (introState.currentPlayer === 1) {

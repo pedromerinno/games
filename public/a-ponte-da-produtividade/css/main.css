@@ -217,3 +217,21 @@ canvas{display:block;filter:saturate(1.5)}
 .mode-btn.active{background:rgba(255,255,255,0.2);color:#fff;border-color:#FFB300}
 .mode-btn:hover{background:rgba(255,255,255,0.15)}
 #player-turn-banner{position:absolute;top:100px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.6);color:#FFD700;padding:10px 30px;border-radius:15px;font-size:20px;font-weight:800;z-index:50;display:none;pointer-events:none}
+
+/* ── Ranking ── */
+.ranking-box{width:100%;max-width:380px;margin:16px auto 0;max-height:260px;overflow:hidden}
+.ranking-title{font-family:'FuturaCond',sans-serif;font-size:16px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.1em;text-align:center;margin-bottom:8px}
+.ranking-list{list-style:none;padding:0;margin:0}
+.ranking-item{display:flex;align-items:center;gap:10px;padding:6px 12px;border-radius:10px;margin-bottom:4px;font-family:'Syne',sans-serif;font-size:13px;color:#fff;background:rgba(255,255,255,0.06)}
+.ranking-item.current{background:rgba(255,215,0,0.15);border:1px solid rgba(255,215,0,0.3)}
+.ranking-pos{font-size:15px;font-weight:800;min-width:24px;text-align:center;color:rgba(255,255,255,0.4)}
+.ranking-item:nth-child(1) .ranking-pos{color:#FFD700}
+.ranking-item:nth-child(2) .ranking-pos{color:#C0C0C0}
+.ranking-item:nth-child(3) .ranking-pos{color:#CD7F32}
+.ranking-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500;font-family:'DM Sans',sans-serif}
+.ranking-score{font-weight:800;color:#ffd966;font-size:14px}
+.ranking-pages{display:flex;justify-content:center;align-items:center;gap:12px;margin-top:8px}
+.ranking-pages button{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;border-radius:50%;width:28px;height:28px;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;pointer-events:all}
+.ranking-pages button:hover{background:rgba(255,255,255,0.2)}
+.ranking-pages button:disabled{opacity:0.3;cursor:default}
+.ranking-pages span{font-family:'DM Sans',sans-serif;font-size:11px;color:rgba(255,255,255,0.4)}
