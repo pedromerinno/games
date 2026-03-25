@@ -73,9 +73,18 @@
 
   function rebuild() {
     var scene = PONTE.scene.scene;
-    // Remove old gate meshes
+    // Remove and dispose old gate meshes
     for (var i = 0; i < sceneMeshes.length; i++) {
       scene.remove(sceneMeshes[i]);
+      sceneMeshes[i].traverse(function(child) {
+        if (child.isMesh) {
+          if (child.geometry) child.geometry.dispose();
+          if (child.material) {
+            if (child.material.map) child.material.map.dispose();
+            child.material.dispose();
+          }
+        }
+      });
     }
     sceneMeshes = [];
     passed = {};

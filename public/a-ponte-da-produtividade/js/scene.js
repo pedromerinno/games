@@ -4,11 +4,11 @@
   var _scene, _camera, _renderer, _clock;
 
   function init() {
+    var isIframe = !!new URLSearchParams(window.location.search).get('player');
+
     _scene = new THREE.Scene();
     _scene.background = new THREE.Color(0x7EC8E3);
     _scene.fog = new THREE.Fog(0x7EC8E3, isIframe ? 50 : 80, isIframe ? 250 : 500);
-
-    var isIframe = !!new URLSearchParams(window.location.search).get('player');
 
     _camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 800);
     _renderer = new THREE.WebGLRenderer({ antialias: !isIframe });

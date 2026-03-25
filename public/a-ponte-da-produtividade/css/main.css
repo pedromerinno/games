@@ -12,7 +12,7 @@ canvas{display:block;filter:saturate(1.5)}
 .pill-val{font-size:28px;font-weight:800;font-family:'FuturaCond',sans-serif;line-height:1;color:#fff}
 .pill-val.pos{color:#7dde9c}
 .pill-val.neg{color:#f08080}
-#pill-name{font-family:'FuturaCond',sans-serif;font-size:18px;font-weight:800;color:#7dde9c;letter-spacing:0.02em}
+#pill-name{font-family:'FuturaCond',sans-serif;font-size:18px;font-weight:800;color:#7dde9c;letter-spacing:0.02em;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 #pill-progress{flex:1;display:flex;align-items:center;gap:8px;min-width:80px}
 #field-progress{flex:1;height:6px;background:rgba(255,255,255,0.12);border-radius:3px;overflow:hidden;min-width:40px}
 #field-progress-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#f47c7c,#ffd966 60%,#7dde9c);transition:width 0.3s}

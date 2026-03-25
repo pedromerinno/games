@@ -116,15 +116,21 @@
     }, Promise.resolve());
   })
   .then(function(){
-    // Init model loader + preload GLB models before starting game
+    // Init model loader + preload GLB models with 10s timeout
+    function withTimeout(promise, ms) {
+      return Promise.race([
+        promise,
+        new Promise(function(_, rej) { setTimeout(function() { rej('timeout'); }, ms); })
+      ]).catch(function() {});
+    }
     return PONTE.models.init().then(function() {
       return Promise.all([
-        PONTE.models.load('cute_toon_tree', 'models/cute_toon_tree.glb').catch(function() {}),
-        PONTE.models.load('farm', 'models/farm.glb').catch(function() {}),
-        PONTE.models.load('coin', 'models/coin.glb').catch(function() {}),
-        PONTE.models.load('trator', 'models/trator.glb').catch(function() {}),
-        PONTE.models.load('truck', 'models/low_poly_car_truck.glb').catch(function() {}),
-        PONTE.models.load('terrain', 'models/terrain.glb').catch(function() {}),
+        withTimeout(PONTE.models.load('cute_toon_tree', 'models/cute_toon_tree.glb'), 10000),
+        withTimeout(PONTE.models.load('farm', 'models/farm.glb'), 10000),
+        withTimeout(PONTE.models.load('coin', 'models/coin.glb'), 10000),
+        withTimeout(PONTE.models.load('trator', 'models/trator.glb'), 10000),
+        withTimeout(PONTE.models.load('truck', 'models/low_poly_car_truck.glb'), 10000),
+        withTimeout(PONTE.models.load('terrain', 'models/terrain.glb'), 10000),
       ]).then(function() { onAssetLoaded(); });
     }).catch(function() { onAssetLoaded(); });
   })

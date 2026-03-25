@@ -272,6 +272,7 @@
   var p1Result = null;
   var p2Result = null;
 
+  var resultTimeout = null;
   window.addEventListener('message', function(e) {
     if (!e.data || e.data.type !== 'gameEnd') return;
 
@@ -284,7 +285,15 @@
 
     // Check if both finished
     if (p1Result && p2Result) {
+      if (resultTimeout) clearTimeout(resultTimeout);
       showResults();
+    } else if (!resultTimeout) {
+      // If one player finished, wait max 120s for the other
+      resultTimeout = setTimeout(function() {
+        if (!p1Result) p1Result = { score: 0, won: false };
+        if (!p2Result) p2Result = { score: 0, won: false };
+        showResults();
+      }, 120000);
     }
   });
 
