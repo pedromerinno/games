@@ -7,7 +7,7 @@ canvas{display:block;filter:saturate(1.5)}
 #hud-wrap{position:absolute;top:12px;left:0;right:0;display:flex;flex-direction:column;align-items:center;gap:10px;transition:opacity 0.3s}
 #hud-wrap.hidden-hud{opacity:0;pointer-events:none}
 #hud-row{display:flex;align-items:center;gap:8px;width:100%;padding:0 16px;flex-wrap:wrap;justify-content:center}
-.pill{display:flex;align-items:center;gap:8px;background:rgba(0,0,0,0.55);border:1.5px solid rgba(255,255,255,0.12);border-radius:24px;padding:8px 18px;white-space:nowrap;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.pill{display:flex;align-items:center;gap:8px;background:rgba(0,0,0,0.7);border:1.5px solid rgba(255,255,255,0.12);border-radius:24px;padding:8px 18px;white-space:nowrap}
 .pill-label{font-size:11px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.05em;font-family:'FuturaCond',sans-serif}
 .pill-val{font-size:28px;font-weight:800;font-family:'FuturaCond',sans-serif;line-height:1;color:#fff}
 .pill-val.pos{color:#7dde9c}
@@ -26,10 +26,10 @@ canvas{display:block;filter:saturate(1.5)}
 #sync-dot.offline{background:#f08080}
 #sync-dot.pending{background:#ffd966}
 #hud-stakes-row{display:flex;justify-content:center;gap:10px}
-#stakes-pill{display:flex;align-items:center;gap:8px;background:rgba(93,64,55,0.75);border:2px solid rgba(141,110,99,0.5);border-radius:24px;padding:10px 24px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+#stakes-pill{display:flex;align-items:center;gap:8px;background:rgba(93,64,55,0.85);border:2px solid rgba(141,110,99,0.5);border-radius:24px;padding:10px 24px}
 #stakes-pill .pill-label{font-size:12px}
 #stakes-pill .pill-val{color:#ffd966;font-size:32px}
-#syncoin-pill{display:flex;align-items:center;gap:8px;background:rgba(0,0,0,0.55);border:2px solid rgba(255,215,0,0.3);border-radius:24px;padding:10px 24px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+#syncoin-pill{display:flex;align-items:center;gap:8px;background:rgba(0,0,0,0.7);border:2px solid rgba(255,215,0,0.3);border-radius:24px;padding:10px 24px}
 #syncoin-pill .pill-label{font-size:12px;color:rgba(255,215,0,0.6)}
 #syncoin-pill .pill-val{color:#FFD700;font-size:32px}
 #syncoin-pill.pulse{animation:coinPulse 0.3s ease-out}

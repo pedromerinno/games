@@ -561,15 +561,16 @@
       return;
     }
 
-    // Gate check
+    // Gate check (with spatial skip)
     var gates = PONTE.gates.list;
     var passed = PONTE.gates.passed;
     for (var i = 0; i < gates.length; i++) {
       var gate = gates[i];
       var key = gate.idx + '-' + gate.side;
       if (passed[key]) continue;
-      var dz = Math.abs(-state.zPos - gate.z);
-      if (dz < 1.8) {
+      var dz = -state.zPos - gate.z;
+      if (dz > 5 || dz < -5) continue;
+      if (Math.abs(dz) < 1.8) {
         var onLeft = state.curX < -1;
         var onRight = state.curX > 1;
         if ((gate.side === 'left' && onLeft) || (gate.side === 'right' && onRight)) {

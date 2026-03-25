@@ -48,7 +48,7 @@
       var farm = farmModel.scene.clone();
       farm.traverse(function(child) {
         if (child.isMesh) {
-          child.castShadow = true;
+          child.castShadow = false;
           child.receiveShadow = true;
         }
       });

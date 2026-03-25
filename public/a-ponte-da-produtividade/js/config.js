@@ -6,7 +6,7 @@
     PL: 2.0,
     DIST: 1680,
     GSPACE: 24,
-    NGATES: 30,
+    NGATES: 20,
     ISPEED: 12,
     MSPEED: 30,
     ISTAKES: 20,
