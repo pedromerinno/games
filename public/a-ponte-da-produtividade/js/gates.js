@@ -104,28 +104,46 @@
     c.roundRect(6, 6, cw - 12, ch - 12, 16);
     c.fill();
 
-    // Name (top, large, bold)
+    // Badge pill (top)
+    var badgeText = isGood ? 'PRODUTO' : 'PROBLEMA';
+    var pillW = 160, pillH = 34, pillX = (cw - pillW) / 2, pillY = 20;
+    c.fillStyle = isGood ? 'rgba(194,252,216,0.35)' : 'rgba(255,128,128,0.35)';
+    c.beginPath();
+    c.roundRect(pillX, pillY, pillW, pillH, 17);
+    c.fill();
     c.fillStyle = isGood ? '#c2fcd8' : '#ff8080';
-    c.font = '800 52px FuturaCond, sans-serif';
+    c.font = '800 18px FuturaCond, sans-serif';
     c.textAlign = 'center';
     c.textBaseline = 'middle';
-    c.fillText(data.name.toUpperCase(), cw / 2, 75);
+    c.fillText(badgeText, cw / 2, pillY + pillH / 2 + 1);
+
+    // Name (large, bold)
+    c.fillStyle = isGood ? '#c2fcd8' : '#ff8080';
+    c.font = '800 48px FuturaCond, sans-serif';
+    c.fillText(data.name.toUpperCase(), cw / 2, 100);
+
+    // Type / desc (small)
+    c.fillStyle = isGood ? 'rgba(194,252,216,0.6)' : 'rgba(255,128,128,0.6)';
+    c.font = '400 16px DM Sans, sans-serif';
+    c.fillText(data.type, cw / 2, 135);
 
     // Score (center, huge)
     c.fillStyle = isGood ? 'rgba(194,252,216,0.45)' : 'rgba(255,128,128,0.45)';
-    c.font = '800 160px FuturaCond, sans-serif';
-    c.fillText((value > 0 ? '+' : '') + value, cw / 2, 225);
+    c.font = '800 150px FuturaCond, sans-serif';
+    c.fillText((value > 0 ? '+' : '') + value, cw / 2, 265);
 
-    // Badge pill (bottom)
-    var badgeText = isGood ? 'DEFENSIVO' : 'PRAGA';
-    var pillW = 150, pillH = 36, pillX = (cw - pillW) / 2, pillY = ch - 60;
-    c.fillStyle = isGood ? 'rgba(194,252,216,0.3)' : 'rgba(255,128,128,0.3)';
-    c.beginPath();
-    c.roundRect(pillX, pillY, pillW, pillH, 18);
-    c.fill();
-    c.fillStyle = isGood ? '#004d36' : '#6e2020';
-    c.font = '800 18px FuturaCond, sans-serif';
-    c.fillText(badgeText, cw / 2, pillY + pillH / 2 + 1);
+    // Fase pill (bottom)
+    var faseText = data.fase || '';
+    if (faseText) {
+      var fPillW = 120, fPillH = 30, fPillX = (cw - fPillW) / 2, fPillY = ch - 55;
+      c.fillStyle = isGood ? 'rgba(194,252,216,0.2)' : 'rgba(255,128,128,0.2)';
+      c.beginPath();
+      c.roundRect(fPillX, fPillY, fPillW, fPillH, 15);
+      c.fill();
+      c.fillStyle = isGood ? 'rgba(194,252,216,0.7)' : 'rgba(255,128,128,0.7)';
+      c.font = '700 14px FuturaCond, sans-serif';
+      c.fillText('FASE ' + faseText, cw / 2, fPillY + fPillH / 2 + 1);
+    }
 
     // Texture
     var tex = new THREE.CanvasTexture(cv);

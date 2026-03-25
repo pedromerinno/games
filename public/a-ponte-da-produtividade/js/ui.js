@@ -3,9 +3,9 @@
 
   var elSaldo, elStakes, elLavoura, elFieldFill, elProgText;
   var elPlayerName, elPips, elCombo, elHint;
-  var elTL, elTR;
+  var elTL, elTR, elSyncoins, elSyncoinPill;
   var cachedPips = [];
-  var lastPct = -1, lastStakes = -1, lastTotal = -999;
+  var lastPct = -1, lastStakes = -1, lastTotal = -999, lastBonusC = -1;
 
   function init() {
     elSaldo = document.getElementById('hud-saldo');
@@ -19,8 +19,10 @@
     elHint = document.getElementById('controls-hint');
     elTL = document.getElementById('touch-left');
     elTR = document.getElementById('touch-right');
+    elSyncoins = document.getElementById('hud-syncoins');
+    elSyncoinPill = document.getElementById('syncoin-pill');
     cachedPips = [].slice.call(elPips.querySelectorAll('.pip'));
-    lastPct = -1; lastStakes = -1; lastTotal = -999;
+    lastPct = -1; lastStakes = -1; lastTotal = -999; lastBonusC = -1;
   }
 
   function update(state) {
@@ -33,6 +35,18 @@
       lastTotal = total;
       elSaldo.textContent = total === 0 ? '0' : (total > 0 ? '+' : '') + total;
       elSaldo.className = 'pill-val ' + (total > 0 ? 'pos' : total < 0 ? 'neg' : '');
+    }
+
+    // SynCoins counter (bonus coins collected on the bridge)
+    if (state.syncoins !== lastBonusC) {
+      var changed = lastBonusC >= 0;
+      lastBonusC = state.syncoins;
+      elSyncoins.textContent = state.syncoins;
+      if (changed && elSyncoinPill) {
+        elSyncoinPill.classList.remove('pulse');
+        void elSyncoinPill.offsetWidth;
+        elSyncoinPill.classList.add('pulse');
+      }
     }
 
     if (state.stakes !== lastStakes) {

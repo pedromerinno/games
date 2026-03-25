@@ -13,7 +13,14 @@
     gateGoodMin: Math.ceil(24 / 2.0),
     gateGoodRange: 12,
     gateBadMin: 5,
-    gateBadRange: 10
+    gateBadRange: 10,
+    BONUS_COUNT: 15,
+    BONUS_MIN_VAL: 5,
+    BONUS_MAX_VAL: 25,
+    BONUS_Y: 1.8,
+    BONUS_FLOAT_AMP: 0.3,
+    BONUS_SPIN: 2.0,
+    BONUS_RADIUS: 2.5
   };
 
   PONTE.config = cfg;

@@ -106,16 +106,40 @@
       }
     }
 
-    // ── Hills ──
-    var hm1 = new THREE.MeshStandardMaterial({ color: 0x66BB6A, roughness: 1 });
-    var hm2 = new THREE.MeshStandardMaterial({ color: 0x81C784, roughness: 1 });
-    for (var i = 0; i < 8; i++) {
+    // ── Rolling hills (soft green mounds) ──
+    var hillColors = [0x5CB85C, 0x6EC46E, 0x4CAF50, 0x7BC67B, 0x45A045];
+    for (var i = 0; i < 12; i++) {
       var hside = i % 2 === 0 ? 1 : -1;
       var r = 18 + Math.random() * 25;
-      var hill = new THREE.Mesh(new THREE.SphereGeometry(r, 12, 8), i % 3 === 0 ? hm2 : hm1);
-      hill.position.set(hside * (45 + Math.random() * 40), -r * 0.65, -(Math.random() * DIST));
-      hill.scale.y = 0.28 + Math.random() * 0.1;
+      var hMat = new THREE.MeshStandardMaterial({ color: hillColors[i % hillColors.length], roughness: 0.9 });
+      var hill = new THREE.Mesh(new THREE.SphereGeometry(r, 12, 8), hMat);
+      hill.position.set(hside * (40 + Math.random() * 35), -r * 0.6, -(Math.random() * DIST));
+      hill.scale.y = 0.3 + Math.random() * 0.12;
       scene.add(hill);
+    }
+
+    // ── Background mountains (GLB terrain) ──
+    var terrainGlb = PONTE.models.get('terrain');
+    if (terrainGlb) {
+      var terrainPositions = [
+        { x: -200, z: -DIST * 0.15, s: 3,   ry: 0 },
+        { x:  200, z: -DIST * 0.2,  s: 2.5, ry: Math.PI },
+        { x: -220, z: -DIST * 0.45, s: 3.5, ry: 0.4 },
+        { x:  210, z: -DIST * 0.5,  s: 2.5, ry: Math.PI + 0.3 },
+        { x: -190, z: -DIST * 0.75, s: 3,   ry: -0.3 },
+        { x:  195, z: -DIST * 0.8,  s: 2.5, ry: Math.PI - 0.2 },
+      ];
+      for (var ti = 0; ti < terrainPositions.length; ti++) {
+        var tp = terrainPositions[ti];
+        var terrain = terrainGlb.scene.clone();
+        terrain.traverse(function(child) {
+          if (child.isMesh) { child.castShadow = false; child.receiveShadow = false; }
+        });
+        terrain.scale.set(tp.s, tp.s, tp.s);
+        terrain.position.set(tp.x, -15, tp.z);
+        terrain.rotation.y = tp.ry;
+        scene.add(terrain);
+      }
     }
 
     // ── Clouds ──

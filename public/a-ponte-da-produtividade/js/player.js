@@ -119,26 +119,7 @@
   }
 
   function updateStakesPile(stakes) {
-    var visualCount = Math.min(stakes, 100);
-    if (visualCount === lastPileCount) return;
-    lastPileCount = visualCount;
-
-    // Fast clear
-    while (stakesPileGroup.children.length > 0) {
-      stakesPileGroup.remove(stakesPileGroup.children[0]);
-    }
-    if (visualCount <= 0) return;
-
-    // Single tall pile
-    for (var i = 0; i < visualCount; i++) {
-      var coin = makeCoinMesh();
-      coin.position.set(
-        (Math.random() - 0.5) * 0.02,
-        i * coinH,
-        (Math.random() - 0.5) * 0.02
-      );
-      stakesPileGroup.add(coin);
-    }
+    // No longer show 3D pile on player's back — coins shown in HUD only
   }
 
   function animateLimbs(elapsed, jumping) {

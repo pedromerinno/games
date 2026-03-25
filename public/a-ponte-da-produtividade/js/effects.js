@@ -109,33 +109,50 @@
     }
   }
 
+  var rewardPositions = [];
+
   function spawnFarmReward(index) {
     var scene = PONTE.scene.scene;
     var cfg = PONTE.config;
     var fz = -cfg.DIST - 5;
     var def = PONTE.farm.REWARDS[index];
     var g = def.build(fz);
+    if (!g) return;
+    g.userData.targetScale = { x: g.scale.x, y: g.scale.y, z: g.scale.z };
     g.scale.set(0.01, 0.01, 0.01);
     g.userData.popIn = 0;
     scene.add(g);
     farmRewards.push(g);
+    var vc = g.userData.visualCenter;
+    rewardPositions[index] = vc ? { x: vc.x, y: vc.y, z: vc.z } : { x: g.position.x, y: g.position.y, z: g.position.z };
     spawnScatterCoins(g.position.x, g.position.z);
   }
 
+  function getRewardPosition(index) {
+    return rewardPositions[index] || null;
+  }
+
+  var farmElapsed = 0;
   function updateFarmRewards(dt) {
+    farmElapsed += dt;
     for (var i = 0; i < farmRewards.length; i++) {
       var g = farmRewards[i];
       if (g.userData.popIn < 1) {
         g.userData.popIn = Math.min(1, g.userData.popIn + dt * 2.5);
         var t = g.userData.popIn;
-        var s = 1 + Math.sin(t * Math.PI) * 0.2 * (1 - t);
-        var scale = t * s;
-        g.scale.set(scale, scale, scale);
+        var bounce = 1 + Math.sin(t * Math.PI) * 0.2 * (1 - t);
+        var p = t * bounce;
+        var ts = g.userData.targetScale || { x: 1, y: 1, z: 1 };
+        g.scale.set(ts.x * p, ts.y * p, ts.z * p);
       }
       if (g.userData.blades) {
         for (var b = 0; b < g.userData.blades.length; b++) {
           g.userData.blades[b].rotation.z += 1.5 * dt;
         }
+      }
+      if (g.userData.floatBase !== undefined) {
+        g.position.y = g.userData.floatBase + Math.sin(farmElapsed * 1.5) * 0.5;
+        g.rotation.y += dt * 0.4;
       }
     }
   }
@@ -147,6 +164,8 @@
     for (var i = 0; i < farmRewards.length; i++) scene.remove(farmRewards[i]);
     farmRewards = [];
     farmRewardSpawned = 0;
+    rewardPositions = [];
+    farmElapsed = 0;
   }
 
   function getFarmRewardSpawned() { return farmRewardSpawned; }
@@ -159,6 +178,7 @@
     updateScatterCoins: updateScatterCoins,
     spawnFarmReward: spawnFarmReward,
     updateFarmRewards: updateFarmRewards,
+    getRewardPosition: getRewardPosition,
     reset: reset,
     getFarmRewardSpawned: getFarmRewardSpawned,
     setFarmRewardSpawned: setFarmRewardSpawned

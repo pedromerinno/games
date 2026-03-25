@@ -8,7 +8,7 @@
     var target = parent || scene;
     var top = new THREE.Mesh(
       new THREE.BoxGeometry(22, 1, depth),
-      new THREE.MeshStandardMaterial({ color: 0x7CB342, roughness: 0.85 })
+      new THREE.MeshStandardMaterial({ color: 0x5CB85C, roughness: 0.85 })
     );
     top.position.set(0, -0.5, z - depth / 2 + 8);
     top.receiveShadow = true;
@@ -64,7 +64,7 @@
       box.setFromObject(farm);
       var center = new THREE.Vector3();
       box.getCenter(center);
-      farm.position.set(-center.x, -box.min.y - 1.8, -cfg.DIST - 12 - center.z);
+      farm.position.set(-center.x, -box.min.y - 5, -cfg.DIST - 12 - center.z);
       endGroup.add(farm);
 
       // Save the front edge of the farm (most positive Z after positioning)
@@ -76,89 +76,69 @@
       makeEndRewardTo(endGroup);
     }
 
-    // ── Green floor extending infinitely behind the farm ──
-    var grassMat = new THREE.MeshStandardMaterial({ color: 0x87AA2F, roughness: 0.9 });
+    // ── Green floor — vibrant layered grass ──
+    var grassMat = new THREE.MeshStandardMaterial({ color: 0x5CB85C, roughness: 0.85 });
     var grassFloor = new THREE.Mesh(new THREE.PlaneGeometry(600, 600), grassMat);
     grassFloor.rotation.x = -Math.PI / 2;
     grassFloor.position.set(0, -0.5, -cfg.DIST - 300);
     grassFloor.receiveShadow = true;
     endGroup.add(grassFloor);
 
-    // Lighter grass patch for variation
+    // Lighter grass further back
     var grassLight = new THREE.Mesh(
       new THREE.PlaneGeometry(600, 600),
-      new THREE.MeshStandardMaterial({ color: 0x66BB6A, roughness: 0.95 })
+      new THREE.MeshStandardMaterial({ color: 0x6EC46E, roughness: 0.9 })
     );
     grassLight.rotation.x = -Math.PI / 2;
     grassLight.position.set(0, -0.48, -cfg.DIST - 800);
     endGroup.add(grassLight);
 
-    // ── Mountains in the far background ──
-    var mountainColors = [0x5D7B3A, 0x4A6B2E, 0x6B8E4E, 0x3E5C28, 0x7A9B5A];
-    var mountainData = [
-      { x: 0,    z: -cfg.DIST - 200, r: 80, h: 0.6 },
-      { x: -120, z: -cfg.DIST - 180, r: 60, h: 0.7 },
-      { x: 100,  z: -cfg.DIST - 190, r: 70, h: 0.55 },
-      { x: -60,  z: -cfg.DIST - 220, r: 90, h: 0.5 },
-      { x: 150,  z: -cfg.DIST - 210, r: 55, h: 0.65 },
-      { x: -180, z: -cfg.DIST - 200, r: 50, h: 0.7 },
-      { x: 200,  z: -cfg.DIST - 230, r: 65, h: 0.6 },
-      // Snow-capped peaks further back
-      { x: -40,  z: -cfg.DIST - 300, r: 100, h: 0.5 },
-      { x: 80,   z: -cfg.DIST - 320, r: 85, h: 0.55 },
-      { x: -150, z: -cfg.DIST - 340, r: 75, h: 0.6 },
+    // Rolling green hills around the farm
+    var farmHillColors = [0x4CAF50, 0x5CB85C, 0x45A045, 0x66BB6A];
+    var farmHills = [
+      { x: -60,  z: -cfg.DIST - 60,  r: 30, sy: 0.3 },
+      { x:  70,  z: -cfg.DIST - 80,  r: 35, sy: 0.28 },
+      { x: -30,  z: -cfg.DIST - 120, r: 40, sy: 0.32 },
+      { x:  100, z: -cfg.DIST - 100, r: 25, sy: 0.35 },
+      { x: -110, z: -cfg.DIST - 90,  r: 28, sy: 0.3 },
+      { x:  40,  z: -cfg.DIST - 140, r: 32, sy: 0.28 },
     ];
-    for (var mi = 0; mi < mountainData.length; mi++) {
-      var md = mountainData[mi];
-      var mMat = new THREE.MeshStandardMaterial({ color: mountainColors[mi % mountainColors.length], roughness: 0.9 });
-      var mountain = new THREE.Mesh(new THREE.ConeGeometry(md.r, md.r * md.h, 8), mMat);
-      mountain.position.set(md.x, md.r * md.h * 0.5 - 5, md.z);
-      mountain.castShadow = true;
-      endGroup.add(mountain);
+    for (var fhi = 0; fhi < farmHills.length; fhi++) {
+      var fh = farmHills[fhi];
+      var fhMesh = new THREE.Mesh(
+        new THREE.SphereGeometry(fh.r, 12, 8),
+        new THREE.MeshStandardMaterial({ color: farmHillColors[fhi % farmHillColors.length], roughness: 0.9 })
+      );
+      fhMesh.position.set(fh.x, -fh.r * 0.6, fh.z);
+      fhMesh.scale.y = fh.sy;
+      endGroup.add(fhMesh);
+    }
 
-      // Snow cap on taller mountains
-      if (md.r > 60) {
-        var snowMat = new THREE.MeshStandardMaterial({ color: 0xF5F5F5, roughness: 0.7 });
-        var snow = new THREE.Mesh(new THREE.ConeGeometry(md.r * 0.3, md.r * md.h * 0.25, 8), snowMat);
-        snow.position.set(md.x, md.r * md.h - 5, md.z);
-        endGroup.add(snow);
+    // ── Mountains (GLB terrain) ──
+    var terrainGlb = PONTE.models.get('terrain');
+    if (terrainGlb) {
+      var farmTerrains = [
+        { x: -200, z: -cfg.DIST - 150, s: 3,   ry: 0.2 },
+        { x:  200, z: -cfg.DIST - 160, s: 2.5, ry: Math.PI + 0.4 },
+        { x:    0, z: -cfg.DIST - 350, s: 3.5, ry: 0.8 },
+        { x: -210, z: -cfg.DIST - 280, s: 2.5, ry: -0.3 },
+        { x:  210, z: -cfg.DIST - 270, s: 3,   ry: Math.PI - 0.5 },
+      ];
+      for (var ti = 0; ti < farmTerrains.length; ti++) {
+        var tp = farmTerrains[ti];
+        var terrain = terrainGlb.scene.clone();
+        terrain.traverse(function(child) {
+          if (child.isMesh) { child.castShadow = false; child.receiveShadow = false; }
+        });
+        terrain.scale.set(tp.s, tp.s, tp.s);
+        terrain.position.set(tp.x, -15, tp.z);
+        terrain.rotation.y = tp.ry;
+        endGroup.add(terrain);
       }
     }
 
-    // Finish arch always on top
-    makeFinishArch(endGroup, cfg);
-
     scene.add(endGroup);
     PONTE.farm.endGroup = endGroup;
-  }
-
-  function makeFinishArch(target, cfg) {
-    var fz = -cfg.DIST - 5;
-    var BW = cfg.BW;
-    var archMat = new THREE.MeshStandardMaterial({ color: 0x2E7D32 });
-    var pillarL = new THREE.Mesh(new THREE.BoxGeometry(0.6, 5.5, 0.6), archMat);
-    pillarL.position.set(-BW / 2 - 0.5, 2.75, fz + 35);
-    pillarL.castShadow = true;
-    target.add(pillarL);
-    var pillarR = pillarL.clone();
-    pillarR.position.x = BW / 2 + 0.5;
-    target.add(pillarR);
-    var archBar = new THREE.Mesh(new THREE.BoxGeometry(BW + 2, 0.7, 0.7), archMat);
-    archBar.position.set(0, 5.5, fz + 35);
-    target.add(archBar);
-    var archCv = document.createElement('canvas');
-    archCv.width = 512; archCv.height = 80;
-    var ac = archCv.getContext('2d');
-    ac.fillStyle = '#2E7D32'; ac.fillRect(0, 0, 512, 80);
-    ac.fillStyle = '#FFF'; ac.font = '800 48px FuturaCond, Arial';
-    ac.textAlign = 'center'; ac.textBaseline = 'middle';
-    ac.fillText('MÁXIMA PRODUTIVIDADE', 256, 42);
-    var archLabel = new THREE.Mesh(
-      new THREE.PlaneGeometry(BW + 1, 0.5),
-      new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(archCv) })
-    );
-    archLabel.position.set(0, 5.5, fz + 35.4);
-    target.add(archLabel);
   }
 
   function makeEndRewardTo(target) {
@@ -743,339 +723,105 @@
   }
 
   // ── Farm celebration rewards ──
+  function loadGLBReward(modelName, scale, x, fz, zOff, rotY) {
+    var model = PONTE.models.get(modelName);
+    if (!model) return null;
+    var g = model.scene.clone();
+    g.traverse(function(child) {
+      if (child.isMesh) { child.castShadow = true; child.receiveShadow = true; }
+    });
+    var box = new THREE.Box3().setFromObject(g);
+    var sz = new THREE.Vector3(); box.getSize(sz);
+    var s = scale / Math.max(sz.x, sz.y, sz.z);
+    g.scale.set(s, s, s);
+    box.setFromObject(g);
+    var center = new THREE.Vector3(); box.getCenter(center);
+    var worldZ = fz + zOff;
+    g.position.set(x - center.x, -box.min.y, worldZ - center.z);
+    g.rotation.y = rotY || 0;
+    g.userData.visualCenter = { x: x, y: (-box.min.y + box.max.y) / 2, z: worldZ };
+    return g;
+  }
+
+  function buildTruck(fz) {
+    var group = new THREE.Group();
+    var bodyMat = new THREE.MeshStandardMaterial({ color: 0xEEEEEE, roughness: 0.4, metalness: 0.3 });
+    var cabMat = new THREE.MeshStandardMaterial({ color: 0xDDDDDD, roughness: 0.35, metalness: 0.3 });
+    var wheelMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.9 });
+    var glassMat = new THREE.MeshStandardMaterial({ color: 0x88CCFF, roughness: 0.1, metalness: 0.5, transparent: true, opacity: 0.6 });
+    var bed = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.8, 5.5), bodyMat);
+    bed.position.set(0, 0.9, -0.5);
+    bed.castShadow = true;
+    group.add(bed);
+    var cab = new THREE.Mesh(new THREE.BoxGeometry(2.6, 1.6, 2.2), cabMat);
+    cab.position.set(0, 1.5, 2.2);
+    cab.castShadow = true;
+    group.add(cab);
+    var glass = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.9, 0.1), glassMat);
+    glass.position.set(0, 1.8, 1.1);
+    group.add(glass);
+    var wheelGeo = new THREE.CylinderGeometry(0.45, 0.45, 0.3, 12);
+    var positions = [[-1.2, 0.45, 2], [1.2, 0.45, 2], [-1.2, 0.45, -1.5], [1.2, 0.45, -1.5]];
+    for (var i = 0; i < positions.length; i++) {
+      var w = new THREE.Mesh(wheelGeo, wheelMat);
+      w.rotation.z = Math.PI / 2;
+      w.position.set(positions[i][0], positions[i][1], positions[i][2]);
+      w.castShadow = true;
+      group.add(w);
+    }
+    group.position.set(6, 0, fz + 18);
+    group.rotation.y = -0.4;
+    group.userData.visualCenter = { x: 6, y: 1.5, z: fz + 18 };
+    return group;
+  }
+
+  function buildDrone(fz) {
+    var group = new THREE.Group();
+    var bodyMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.3, metalness: 0.6 });
+    var propMat = new THREE.MeshStandardMaterial({ color: 0x666666, roughness: 0.4, metalness: 0.5 });
+    var ledMat = new THREE.MeshStandardMaterial({ color: 0x00FF44, emissive: 0x00FF44, emissiveIntensity: 0.8 });
+    var body = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.4, 1.2), bodyMat);
+    body.castShadow = true;
+    group.add(body);
+    var armGeo = new THREE.BoxGeometry(0.15, 0.12, 2.0);
+    var arm1 = new THREE.Mesh(armGeo, bodyMat);
+    arm1.rotation.y = Math.PI / 4;
+    group.add(arm1);
+    var arm2 = new THREE.Mesh(armGeo, bodyMat);
+    arm2.rotation.y = -Math.PI / 4;
+    group.add(arm2);
+    var propGeo = new THREE.CylinderGeometry(0.6, 0.6, 0.05, 16);
+    var motorGeo = new THREE.CylinderGeometry(0.15, 0.15, 0.2, 8);
+    var offsets = [[0.7, 0, 0.7], [-0.7, 0, 0.7], [0.7, 0, -0.7], [-0.7, 0, -0.7]];
+    for (var i = 0; i < offsets.length; i++) {
+      var motor = new THREE.Mesh(motorGeo, bodyMat);
+      motor.position.set(offsets[i][0], 0.3, offsets[i][2]);
+      group.add(motor);
+      var prop = new THREE.Mesh(propGeo, propMat);
+      prop.material = propMat.clone();
+      prop.material.transparent = true;
+      prop.material.opacity = 0.3;
+      prop.position.set(offsets[i][0], 0.45, offsets[i][2]);
+      group.add(prop);
+      var led = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 6), ledMat);
+      led.position.set(offsets[i][0], -0.15, offsets[i][2]);
+      group.add(led);
+    }
+    group.position.set(0, 6, fz + 10);
+    group.userData.floatBase = 6;
+    group.userData.visualCenter = { x: 0, y: 6, z: fz + 10 };
+    return group;
+  }
+
   var FARM_REWARDS = [
-    { delay: 0.5, build: function(fz) {
-      // Try GLB tractor
-      var tratorModel = PONTE.models.get('trator');
-      if (tratorModel) {
-        var g = tratorModel.scene.clone();
-        g.traverse(function(child) {
-          if (child.isMesh) { child.castShadow = true; child.receiveShadow = true; }
-        });
-        var box = new THREE.Box3().setFromObject(g);
-        var sz = new THREE.Vector3();
-        box.getSize(sz);
-        var s = 5 / Math.max(sz.x, sz.y, sz.z);
-        g.scale.set(s, s, s);
-        box.setFromObject(g);
-        var center = new THREE.Vector3();
-        box.getCenter(center);
-        g.position.set(-6 - center.x, -box.min.y, fz + 25 - center.z);
-        g.rotation.y = 0.5;
-        return g;
-      }
-      // Fallback: procedural tractor
-      var g = new THREE.Group();
-      var greenMat = new THREE.MeshStandardMaterial({ color: 0x2E7D32, roughness: 0.4 });
-      var greenDark = new THREE.MeshStandardMaterial({ color: 0x1B5E20, roughness: 0.5 });
-      var yellowMat = new THREE.MeshStandardMaterial({ color: 0xFDD835, roughness: 0.35 });
-      var blackMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.9 });
-      var glassMat = new THREE.MeshStandardMaterial({ color: 0x81D4FA, roughness: 0.05, metalness: 0.3, transparent: true, opacity: 0.6 });
-      var chromeMat = new THREE.MeshStandardMaterial({ color: 0xDDDDDD, roughness: 0.1, metalness: 0.7 });
-
-      function makeWheel(radius, width, x, y, z) {
-        var wg = new THREE.Group();
-        var tire = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, width, 16), blackMat);
-        tire.rotation.z = Math.PI / 2;
-        tire.castShadow = true;
-        wg.add(tire);
-        var rim = new THREE.Mesh(new THREE.CylinderGeometry(radius * 0.5, radius * 0.5, width + 0.04, 12), yellowMat);
-        rim.rotation.z = Math.PI / 2;
-        wg.add(rim);
-        var cap = new THREE.Mesh(new THREE.CylinderGeometry(radius * 0.2, radius * 0.2, width + 0.08, 8), chromeMat);
-        cap.rotation.z = Math.PI / 2;
-        wg.add(cap);
-        for (var t = 0; t < 8; t++) {
-          var a = (t / 8) * Math.PI * 2;
-          var tread = new THREE.Mesh(new THREE.BoxGeometry(0.04, radius * 0.2, width * 0.9), new THREE.MeshStandardMaterial({ color: 0x111111 }));
-          tread.position.set(0, Math.cos(a) * radius * 0.92, Math.sin(a) * radius * 0.92);
-          tread.rotation.x = a;
-          wg.add(tread);
-        }
-        wg.position.set(x, y, z);
-        return wg;
-      }
-
-      // Engine / hood
-      var hood = new THREE.Mesh(new THREE.BoxGeometry(2.0, 1.2, 2.8), greenMat);
-      hood.position.set(0, 1.6, 1.6);
-      hood.castShadow = true;
-      g.add(hood);
-      var hoodRound = new THREE.Mesh(new THREE.CylinderGeometry(1.0, 1.0, 2.8, 8, 1, false, 0, Math.PI), greenDark);
-      hoodRound.rotation.x = Math.PI / 2;
-      hoodRound.rotation.z = Math.PI;
-      hoodRound.position.set(0, 2.2, 1.6);
-      hoodRound.scale.set(1, 0.2, 1);
-      g.add(hoodRound);
-      // Grille
-      var grilleBg = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.0, 0.12), new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.7 }));
-      grilleBg.position.set(0, 1.5, 3.02);
-      g.add(grilleBg);
-      for (var gb = 0; gb < 4; gb++) {
-        var bar = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.06, 0.06), yellowMat);
-        bar.position.set(0, 1.2 + gb * 0.22, 3.08);
-        g.add(bar);
-      }
-      // Headlights
-      for (var hl = -1; hl <= 1; hl += 2) {
-        var lightRing = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.06, 10), chromeMat);
-        lightRing.rotation.x = Math.PI / 2;
-        lightRing.position.set(hl * 0.65, 1.9, 3.04);
-        g.add(lightRing);
-        var lightBulb = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.04, 10), new THREE.MeshStandardMaterial({ color: 0xFFF9C4, emissive: 0xFFD54F, emissiveIntensity: 0.5 }));
-        lightBulb.rotation.x = Math.PI / 2;
-        lightBulb.position.set(hl * 0.65, 1.9, 3.06);
-        g.add(lightBulb);
-      }
-      // Chassis
-      var chassis = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.6, 4.5), greenDark);
-      chassis.position.set(0, 0.7, 0.3);
-      g.add(chassis);
-      // Fenders
-      for (var s = -1; s <= 1; s += 2) {
-        var fender = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.8, 2.2), greenMat);
-        fender.position.set(s * 1.35, 1.6, -1.0);
-        g.add(fender);
-        var fenderTop = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, 0.5, 12, 1, false, s > 0 ? 0 : Math.PI, Math.PI), greenDark);
-        fenderTop.rotation.x = Math.PI / 2;
-        fenderTop.position.set(s * 1.35, 1.6, -1.0);
-        fenderTop.scale.set(0.45, 1, 0.75);
-        g.add(fenderTop);
-      }
-      // Cabin
-      var cabFloor = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.12, 2.2), greenDark);
-      cabFloor.position.set(0, 2.2, -0.6);
-      g.add(cabFloor);
-      for (var px = -1; px <= 1; px += 2) {
-        for (var pz = -1; pz <= 1; pz += 2) {
-          var pillar = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.8, 0.12), greenDark);
-          pillar.position.set(px * 1.05, 3.15, -0.6 + pz * 0.95);
-          g.add(pillar);
-        }
-      }
-      var cabRoof = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.14, 2.5), greenDark);
-      cabRoof.position.set(0, 4.1, -0.6);
-      cabRoof.castShadow = true;
-      g.add(cabRoof);
-      var roofEdge = new THREE.Mesh(new THREE.BoxGeometry(2.7, 0.06, 2.6), yellowMat);
-      roofEdge.position.set(0, 4.0, -0.6);
-      g.add(roofEdge);
-      // Glass windows
-      var winF = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 1.5), glassMat);
-      winF.position.set(0, 3.2, 0.36);
-      g.add(winF);
-      var winB = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 1.5), glassMat);
-      winB.position.set(0, 3.2, -1.56);
-      g.add(winB);
-      for (var ws = -1; ws <= 1; ws += 2) {
-        var winS = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 1.5), glassMat);
-        winS.rotation.y = ws * Math.PI / 2;
-        winS.position.set(ws * 1.06, 3.2, -0.6);
-        g.add(winS);
-      }
-      // Steering wheel
-      var steer = new THREE.Mesh(new THREE.TorusGeometry(0.15, 0.025, 6, 10), blackMat);
-      steer.position.set(0, 2.8, 0.1);
-      steer.rotation.x = -0.6;
-      g.add(steer);
-      // Exhaust stack
-      var exhaust = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 2.4, 8), chromeMat);
-      exhaust.position.set(0.75, 3.0, 1.8);
-      exhaust.castShadow = true;
-      g.add(exhaust);
-      var exhaustCap = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.08, 0.15, 8), chromeMat);
-      exhaustCap.position.set(0.75, 4.25, 1.8);
-      g.add(exhaustCap);
-      // Wheels
-      g.add(makeWheel(1.0, 0.55, -1.55, 1.0, -1.0));
-      g.add(makeWheel(1.0, 0.55, 1.55, 1.0, -1.0));
-      g.add(makeWheel(0.55, 0.35, -1.15, 0.55, 2.2));
-      g.add(makeWheel(0.55, 0.35, 1.15, 0.55, 2.2));
-      // Hitch
-      var hitch = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.2, 0.8), chromeMat);
-      hitch.position.set(0, 0.5, -2.3);
-      g.add(hitch);
-
-      g.position.set(-6, 0, fz + 25);
-      g.rotation.y = 0.5;
-      return g;
+    { delay: 1.0, pos: { x: -6, z: 25 }, build: function(fz) {
+      return loadGLBReward('trator', 5, -6, fz, 25, 0.5);
     }},
-    { delay: 1.0, build: function(fz) {
-      // Windmill (classic farm style)
-      var g = new THREE.Group();
-      var baseMat = new THREE.MeshStandardMaterial({ color: 0xBDBDBD, roughness: 0.5, metalness: 0.15 });
-      var tower = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.9, 8, 8), baseMat);
-      tower.position.y = 4;
-      tower.castShadow = true;
-      g.add(tower);
-      var plat = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 0.15, 12), new THREE.MeshStandardMaterial({ color: 0x9E9E9E }));
-      plat.position.y = 8.1;
-      g.add(plat);
-      var hub = new THREE.Mesh(new THREE.SphereGeometry(0.35, 8, 6), new THREE.MeshStandardMaterial({ color: 0xE0E0E0, metalness: 0.3 }));
-      hub.position.set(0, 8.5, 0.3);
-      g.add(hub);
-      var bladeMat = new THREE.MeshStandardMaterial({ color: 0xEEEEEE, roughness: 0.4 });
-      g.userData.blades = [];
-      for (var b = 0; b < 4; b++) {
-        var pivot = new THREE.Group();
-        pivot.position.set(0, 8.5, 0.4);
-        var beam = new THREE.Mesh(new THREE.BoxGeometry(0.12, 3.5, 0.04), bladeMat);
-        beam.position.y = 1.75;
-        pivot.add(beam);
-        for (var cs = 0; cs < 5; cs++) {
-          var strut = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.04, 0.03), bladeMat);
-          strut.position.set(0.2, 0.6 + cs * 0.65, 0);
-          pivot.add(strut);
-        }
-        var sail = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 3.0), new THREE.MeshStandardMaterial({ color: 0xFAFAFA, transparent: true, opacity: 0.6, side: THREE.DoubleSide }));
-        sail.position.set(0.2, 1.75, 0.02);
-        pivot.add(sail);
-        pivot.rotation.z = (b / 4) * Math.PI * 2;
-        g.add(pivot);
-        g.userData.blades.push(pivot);
-      }
-      var braceMat = new THREE.MeshStandardMaterial({ color: 0x757575 });
-      for (var br = 0; br < 3; br++) {
-        var brace = new THREE.Mesh(new THREE.BoxGeometry(0.04, 2.4, 0.04), braceMat);
-        brace.position.set(0.6, 1.5 + br * 2.5, 0);
-        brace.rotation.z = 0.4;
-        g.add(brace);
-        var brace2 = brace.clone();
-        brace2.position.x = -0.6;
-        brace2.rotation.z = -0.4;
-        g.add(brace2);
-      }
-      g.position.set(-13, 0, fz + 8);
-      return g;
+    { delay: 5.0, pos: { x: 8, z: 22 }, build: function(fz) {
+      return loadGLBReward('truck', 5, 8, fz, 22, -0.3) || buildTruck(fz);
     }},
-    { delay: 1.7, build: function(fz) {
-      // Hay bales (round, scattered)
-      var g = new THREE.Group();
-      var hayMat = new THREE.MeshStandardMaterial({ color: 0xD4A843, roughness: 0.9 });
-      var hayLight = new THREE.MeshStandardMaterial({ color: 0xE6C258, roughness: 0.85 });
-      var positions = [
-        [0, 0, 0], [1.8, 0, 0.4], [0.8, 1.05, 0.2],
-        [-1.5, 0, -0.6], [3.2, 0, -0.3], [1.5, 0, -1.5],
-        [-0.5, 0, 1.2], [2.5, 0, 1.0]
-      ];
-      for (var i = 0; i < positions.length; i++) {
-        var mat = i % 2 === 0 ? hayMat : hayLight;
-        var bale = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 0.9, 12), mat);
-        bale.rotation.z = Math.PI / 2;
-        bale.rotation.y = (Math.random() - 0.5) * 0.3;
-        bale.position.set(positions[i][0], positions[i][1] + 0.55, positions[i][2]);
-        bale.castShadow = true;
-        g.add(bale);
-        var strandMat = new THREE.MeshStandardMaterial({ color: 0xCDB54A, roughness: 1 });
-        for (var st = 0; st < 3; st++) {
-          var strand = new THREE.Mesh(new THREE.CylinderGeometry(0.01, 0.01, 0.25, 3), strandMat);
-          strand.position.set(positions[i][0] + (Math.random() - 0.5) * 0.3, positions[i][1] + 1.1, positions[i][2] + (Math.random() - 0.5) * 0.3);
-          strand.rotation.x = (Math.random() - 0.5) * 0.5;
-          strand.rotation.z = (Math.random() - 0.5) * 0.5;
-          g.add(strand);
-        }
-      }
-      g.position.set(5, 0, fz + 15);
-      return g;
-    }},
-    { delay: 2.3, build: function(fz) {
-      // Pulverizador (crop sprayer)
-      var g = new THREE.Group();
-      var frameMat = new THREE.MeshStandardMaterial({ color: 0x1565C0, roughness: 0.4, metalness: 0.1 });
-      var tankMat = new THREE.MeshStandardMaterial({ color: 0x42A5F5, roughness: 0.3, metalness: 0.15 });
-      var wheelMat = new THREE.MeshStandardMaterial({ color: 0x212121, roughness: 0.8 });
-      var frame = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.8, 3.0), frameMat);
-      frame.position.y = 1.0;
-      g.add(frame);
-      var tank = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.9, 2.2, 12), tankMat);
-      tank.position.set(0, 2.0, -0.2);
-      g.add(tank);
-      var capMat = new THREE.MeshStandardMaterial({ color: 0xFFD600, roughness: 0.4 });
-      var cap = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.12, 8), capMat);
-      cap.position.set(0, 2.95, -0.2);
-      g.add(cap);
-      for (var s = -1; s <= 1; s += 2) {
-        var arm = new THREE.Mesh(new THREE.BoxGeometry(5, 0.12, 0.12), frameMat);
-        arm.position.set(s * 3.5, 0.8, 0.5);
-        g.add(arm);
-        var armBrace = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.5, 0.08), frameMat);
-        armBrace.position.set(s * 1.0, 1.05, 0.5);
-        armBrace.rotation.z = s * 0.4;
-        g.add(armBrace);
-        for (var n = 0; n < 5; n++) {
-          var nz = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.05, 0.25, 5), capMat);
-          nz.position.set(s * (1.2 + n * 0.9), 0.6, 0.5);
-          g.add(nz);
-        }
-      }
-      for (var s = -1; s <= 1; s += 2) {
-        for (var wz = -1; wz <= 1; wz += 2) {
-          var tire = new THREE.Mesh(new THREE.TorusGeometry(0.45, 0.18, 8, 12), wheelMat);
-          tire.rotation.y = Math.PI / 2;
-          tire.position.set(s * 1.3, 0.45, wz * 1.0);
-          g.add(tire);
-          var whub = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.08, 8), frameMat);
-          whub.rotation.z = Math.PI / 2;
-          whub.position.set(s * 1.3, 0.45, wz * 1.0);
-          g.add(whub);
-        }
-      }
-      g.position.set(-3, 0, fz + 28);
-      g.rotation.y = -0.3;
-      return g;
-    }},
-    { delay: 2.9, build: function(fz) {
-      // Pig pen with pig
-      var g = new THREE.Group();
-      var fenceMat = new THREE.MeshStandardMaterial({ color: 0x8D6E63, roughness: 0.8 });
-      for (var fi = 0; fi < 8; fi++) {
-        var a = (fi / 8) * Math.PI * 2;
-        var post = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 1.0, 5), fenceMat);
-        post.position.set(Math.cos(a) * 2.0, 0.5, Math.sin(a) * 2.0);
-        g.add(post);
-        var nextA = ((fi + 1) / 8) * Math.PI * 2;
-        var mx = (Math.cos(a) + Math.cos(nextA)) / 2 * 2.0;
-        var mz = (Math.sin(a) + Math.sin(nextA)) / 2 * 2.0;
-        var len = 1.6;
-        var rail = new THREE.Mesh(new THREE.BoxGeometry(len, 0.06, 0.06), fenceMat);
-        rail.position.set(mx, 0.4, mz);
-        rail.rotation.y = Math.atan2(Math.sin(nextA) - Math.sin(a), Math.cos(nextA) - Math.cos(a));
-        g.add(rail);
-        var rail2 = rail.clone();
-        rail2.position.y = 0.7;
-        g.add(rail2);
-      }
-      var pigMat = new THREE.MeshStandardMaterial({ color: 0xFFCDD2, roughness: 0.7 });
-      var pigDark = new THREE.MeshStandardMaterial({ color: 0xEF9A9A, roughness: 0.7 });
-      var pigBody = new THREE.Mesh(new THREE.SphereGeometry(0.5, 8, 7), pigMat);
-      pigBody.position.set(0, 0.45, 0);
-      pigBody.scale.set(1.3, 0.9, 1);
-      g.add(pigBody);
-      var pigHead = new THREE.Mesh(new THREE.SphereGeometry(0.3, 8, 6), pigMat);
-      pigHead.position.set(0, 0.5, 0.6);
-      g.add(pigHead);
-      var snout = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.14, 0.1, 8), pigDark);
-      snout.rotation.x = Math.PI / 2;
-      snout.position.set(0, 0.45, 0.9);
-      g.add(snout);
-      for (var e = -1; e <= 1; e += 2) {
-        var ear = new THREE.Mesh(new THREE.SphereGeometry(0.1, 5, 4), pigDark);
-        ear.position.set(e * 0.2, 0.7, 0.55);
-        ear.scale.set(0.6, 1, 0.4);
-        g.add(ear);
-      }
-      for (var lx = -1; lx <= 1; lx += 2) {
-        for (var lz = -1; lz <= 1; lz += 2) {
-          var leg = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.3, 5), pigDark);
-          leg.position.set(lx * 0.3, 0.15, lz * 0.3);
-          g.add(leg);
-        }
-      }
-      var mud = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.4, 0.04, 12), new THREE.MeshStandardMaterial({ color: 0x795548, roughness: 1 }));
-      mud.position.set(0.5, 0.02, -0.5);
-      g.add(mud);
-      g.position.set(12, 0, fz + 20);
-      return g;
+    { delay: 9.0, pos: { x: 0, z: 10 }, build: function(fz) {
+      return buildDrone(fz);
     }}
   ];
 

@@ -9,6 +9,7 @@
     stakes: 0,
     coins: 0,
     bonusC: 0,
+    syncoins: 0,
     running: false,
     falling: false,
     jumping: false,
@@ -39,6 +40,9 @@
 
     // Gates
     PONTE.gates.make();
+
+    // Bonuses
+    PONTE.bonuses.make();
 
     // Scenery
     PONTE.scenery.make();
@@ -175,7 +179,7 @@
     PONTE.bridge.reset();
 
     state.zPos = 0; state.tgtX = 0; state.curX = 0;
-    state.stakes = cfg.ISTAKES; state.coins = 0; state.bonusC = 0;
+    state.stakes = cfg.ISTAKES; state.coins = 0; state.bonusC = 0; state.syncoins = 0;
     PONTE.player.resetPileCount();
     state.falling = false; state.jumping = false;
     PONTE.input.clearBuffer();
@@ -189,6 +193,8 @@
     PONTE.effects.reset();
     PONTE.effects.setFarmRewardSpawned(0);
     PONTE.gates.passed = {};
+    PONTE.bonuses.reset();
+    PONTE.bonuses.make();
 
     // HUD: player name
     var curName = introState.player1Name;
@@ -227,7 +233,7 @@
     PONTE.bridge.reset();
 
     state.zPos = 0; state.tgtX = 0; state.curX = 0;
-    state.stakes = cfg.ISTAKES; state.coins = 0; state.bonusC = 0;
+    state.stakes = cfg.ISTAKES; state.coins = 0; state.bonusC = 0; state.syncoins = 0;
     PONTE.player.resetPileCount();
     state.falling = false; state.jumping = false;
     PONTE.input.clearBuffer();
@@ -240,6 +246,8 @@
     PONTE.effects.reset();
     PONTE.effects.setFarmRewardSpawned(0);
     PONTE.gates.passed = {};
+    PONTE.bonuses.reset();
+    PONTE.bonuses.make();
 
     PONTE.ui.getPlayerNameEl().textContent = playerName;
 
@@ -361,6 +369,22 @@
       document.getElementById('win-score').textContent = finalScore;
       document.getElementById('win-screen').classList.remove('hidden');
       renderRanking('ranking-win', curDoc);
+      var prodGrid = document.getElementById('win-products');
+      if (prodGrid) {
+        var prizes = [
+          { emoji: '🚜', name: 'Trator' },
+          { emoji: '🛻', name: 'Caminhonete' },
+          { emoji: '🛩️', name: 'Drone' }
+        ];
+        var html = '';
+        for (var pi = 0; pi < prizes.length; pi++) {
+          html += '<div class="win-prize-card">';
+          html += '<span class="win-prize-icon">' + prizes[pi].emoji + '</span>';
+          html += '<span class="win-prize-name">' + prizes[pi].name + '</span>';
+          html += '</div>';
+        }
+        prodGrid.innerHTML = html;
+      }
     } else {
       document.getElementById('final-score').textContent = finalScore;
       document.getElementById('game-over').classList.remove('hidden');
@@ -418,16 +442,62 @@
 
     // Camera
     if (state.winTriggered) {
-      var camT = Math.min(state.winElapsed / 10.0, 1);
-      var camAngle = camT * Math.PI * 0.6 - 0.3;
-      var camDist = 30 + camT * 20;
-      var camH = 12 + Math.sin(camT * Math.PI) * 10;
-      camera.position.set(
-        Math.sin(camAngle) * camDist,
-        camH,
-        -cfg.DIST + Math.cos(camAngle) * camDist
-      );
-      camera.lookAt(0, 2, -cfg.DIST - 8);
+      var farmZ = -cfg.DIST - 5;
+      var t = state.winElapsed;
+      var cx, cy, cz, lx, ly, lz;
+
+      // Known reward world positions
+      var targets = [
+        { x: -6, y: 2, z: farmZ + 25 },  // trator
+        { x: 8,  y: 2, z: farmZ + 22 },   // caminhonete
+        { x: 0,  y: 6, z: farmZ + 10 }    // drone
+      ];
+      var delays = [1.0, 5.0, 9.0];
+
+      if (t < delays[0]) {
+        // Approach
+        var p = t / delays[0];
+        cx = 0; cy = 8; cz = farmZ + 45 - p * 5;
+        lx = 0; ly = 3; lz = farmZ + 20;
+      } else if (t < delays[1]) {
+        // Cut 1: orbit trator
+        var tg = targets[0];
+        var p = (t - delays[0]) / (delays[1] - delays[0]);
+        var angle = -0.5 + p * Math.PI * 0.6;
+        cx = tg.x + Math.sin(angle) * 12;
+        cy = tg.y + 4 + Math.sin(p * Math.PI) * 2;
+        cz = tg.z + Math.cos(angle) * 12;
+        lx = tg.x; ly = tg.y; lz = tg.z;
+      } else if (t < delays[2]) {
+        // Cut 2: orbit caminhonete
+        var tg = targets[1];
+        var p = (t - delays[1]) / (delays[2] - delays[1]);
+        var angle = 0.3 + p * Math.PI * 0.6;
+        cx = tg.x + Math.sin(angle) * 12;
+        cy = tg.y + 4 + Math.sin(p * Math.PI) * 2;
+        cz = tg.z + Math.cos(angle) * 12;
+        lx = tg.x; ly = tg.y; lz = tg.z;
+      } else if (t < delays[2] + 4) {
+        // Cut 3: orbit drone
+        var tg = targets[2];
+        var p = (t - delays[2]) / 4;
+        var angle = -0.2 + p * Math.PI * 0.5;
+        cx = tg.x + Math.sin(angle) * 10;
+        cy = tg.y + 2 + Math.sin(p * Math.PI) * 3;
+        cz = tg.z + Math.cos(angle) * 10;
+        lx = tg.x; ly = tg.y; lz = tg.z;
+      } else {
+        // Final: wide pullback
+        var p = Math.min((t - delays[2] - 4) / 3.0, 1);
+        var angle = 1.0 + p * 0.6;
+        var dist = 25 + p * 30;
+        cx = Math.sin(angle) * dist;
+        cy = 15 + p * 10;
+        cz = farmZ + 20 + Math.cos(angle) * dist;
+        lx = 0; ly = 2; lz = farmZ + 15;
+      }
+      camera.position.set(cx, cy, cz);
+      camera.lookAt(lx, ly, lz);
     } else {
       camera.position.set(state.curX * 0.12, 12 + Math.sin(elapsed * 0.4) * 0.2, -state.zPos + 14);
       camera.lookAt(state.curX * 0.15, 1, -state.zPos - 10);
@@ -453,16 +523,38 @@
       PONTE.ui.disableTouch();
       var ft = 0;
       var fy0 = PONTE.player.group.position.y;
+      var fx0 = PONTE.player.group.position.x;
+      var fz0 = PONTE.player.group.position.z;
+      var camShake = 0;
+      var fallDone = false;
       var fallFn = function() {
-        ft += 0.018;
-        PONTE.player.group.position.y = fy0 - ft * ft * 35;
-        PONTE.player.group.rotation.x += 0.12;
-        PONTE.player.group.rotation.z += 0.06;
+        ft += 0.014;
+        var py = fy0 - ft * ft * 22;
+        PONTE.player.group.position.y = py;
+        PONTE.player.group.rotation.x += 0.08;
+        PONTE.player.group.rotation.z += 0.04;
+
+        // Camera watches the fall with slight shake
+        if (!fallDone) {
+          camShake = Math.sin(ft * 40) * Math.min(ft * 0.5, 0.3);
+          camera.position.set(
+            fx0 * 0.12 + camShake,
+            12 + ft * 3,
+            fz0 + 14 + ft * 4
+          );
+          camera.lookAt(fx0 * 0.15, py, fz0 - 5);
+        }
+
         renderer.render(scene, camera);
-        if (PONTE.player.group.position.y > -18) {
+
+        if (py > -18) {
           requestAnimationFrame(fallFn);
-        } else {
-          handleGameEnd(Math.min(state.coins + state.bonusC, 10000), false);
+        } else if (!fallDone) {
+          fallDone = true;
+          // Pause before showing game over
+          setTimeout(function() {
+            handleGameEnd(Math.min(state.coins + state.bonusC, 10000), false);
+          }, 800);
         }
       };
       fallFn();
@@ -486,7 +578,7 @@
           if (gate.value > 0) {
             state.stakes += gate.value;
             state.bonusC += gate.value * 4;
-            PONTE.effects.showFloat('+' + gate.value + ' Produtividade', '#4CAF50');
+            PONTE.effects.showFloat('+' + gate.value + ' Produtividade', '#81E6A0');
           } else {
             state.stakes = Math.max(0, state.stakes + gate.value);
             PONTE.effects.showFloat(gate.value + ' Produtividade', '#F44336');
@@ -503,6 +595,17 @@
       if (!passed[gates[i].idx + '-left'] && -state.zPos < gates[i].z - 3) {
         passed[gates[i].idx + '-left'] = true;
         passed[gates[i].idx + '-right'] = true;
+      }
+    }
+
+    // Bonus coin collection
+    if (!state.winTriggered && !state.falling) {
+      var collected = PONTE.bonuses.update(dt, elapsed, -state.zPos, state.curX);
+      if (collected) {
+        for (var bi = 0; bi < collected.length; bi++) {
+          state.syncoins += collected[bi].value;
+          PONTE.effects.showFloat('+' + collected[bi].value + ' SynCoins', '#FFD700');
+        }
       }
     }
 
@@ -526,15 +629,19 @@
         skipBtn.onclick = function() {
           if (state.winTimer) { clearTimeout(state.winTimer); state.winTimer = null; }
           skipBtn.classList.add('hidden');
+          var celHide = document.getElementById('celebration-text');
+          if (celHide) { celHide.classList.add('hidden'); celHide.classList.remove('visible'); }
           state.running = false;
           handleGameEnd(state.winFinalScore, true);
         };
       }
       var REWARDS = PONTE.farm.REWARDS;
-      var totalDelay = REWARDS[REWARDS.length - 1].delay + 8.0;
+      var totalDelay = REWARDS[REWARDS.length - 1].delay + 7;
       state.winTimer = setTimeout(function() {
         state.running = false;
         if (skipBtn) skipBtn.classList.add('hidden');
+        var celHide = document.getElementById('celebration-text');
+        if (celHide) { celHide.classList.add('hidden'); celHide.classList.remove('visible'); }
         handleGameEnd(state.winFinalScore, true);
       }, totalDelay * 1000);
     }
@@ -550,6 +657,35 @@
       }
       PONTE.effects.updateScatterCoins(dt);
       PONTE.effects.updateFarmRewards(dt);
+
+      // Celebration text synced with rewards
+      var celEl = document.getElementById('celebration-text');
+      if (celEl) {
+        var celTexts = [
+          'Aumente sua produtividade',
+          'Acumule SynCoins',
+          'Resgate prêmios'
+        ];
+        var celDelays = [1.0, 5.0, 9.0];
+        var activeCel = -1;
+        for (var ci = celDelays.length - 1; ci >= 0; ci--) {
+          if (state.winElapsed >= celDelays[ci]) { activeCel = ci; break; }
+        }
+        if (activeCel >= 0) {
+          var timeSinceCut = state.winElapsed - celDelays[activeCel];
+          celEl.classList.remove('hidden');
+          celEl.textContent = celTexts[activeCel];
+          if (timeSinceCut < 0.6) {
+            celEl.classList.add('visible');
+          } else if (activeCel < celDelays.length - 1 && state.winElapsed > celDelays[activeCel + 1] - 0.6) {
+            celEl.classList.remove('visible');
+          } else if (activeCel === celDelays.length - 1 && timeSinceCut > 3.5) {
+            celEl.classList.remove('visible');
+          } else {
+            celEl.classList.add('visible');
+          }
+        }
+      }
     }
 
     renderer.render(scene, camera);

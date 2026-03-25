@@ -4,6 +4,7 @@
   var assets = [
     { type:'image',  src:'assets/BG.jpg' },
     { type:'image',  src:'assets/Logo_AcessaAgro.svg' },
+    { type:'image',  src:'assets/syngenta-logo.svg' },
     { type:'image',  src:'assets/TITLE_Game.svg' },
     { type:'font',   src:'assets/Futura Condensed Extra Bold.otf', family:'FuturaCond' }
   ];
@@ -17,6 +18,7 @@
     'js/farm.js',
     'js/scenery.js',
     'js/effects.js',
+    'js/bonuses.js',
     'js/ui.js',
     'js/input.js',
     'js/intro.js',
@@ -121,6 +123,8 @@
         PONTE.models.load('farm', 'models/farm.glb').catch(function() {}),
         PONTE.models.load('coin', 'models/coin.glb').catch(function() {}),
         PONTE.models.load('trator', 'models/trator.glb').catch(function() {}),
+        PONTE.models.load('truck', 'models/low_poly_car_truck.glb').catch(function() {}),
+        PONTE.models.load('terrain', 'models/terrain.glb').catch(function() {}),
       ]).then(function() { onAssetLoaded(); });
     }).catch(function() { onAssetLoaded(); });
   })

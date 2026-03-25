@@ -19,11 +19,11 @@
     scene.add(bridgeGroup);
     PONTE.bridge.group = bridgeGroup;
 
-    pm1 = new THREE.MeshStandardMaterial({ color: 0x8D6E63, roughness: 0.65 });
-    pm2 = new THREE.MeshStandardMaterial({ color: 0x7B5B4C, roughness: 0.7 });
-    beamMat = new THREE.MeshStandardMaterial({ color: 0x4E342E });
-    railMat = new THREE.MeshStandardMaterial({ color: 0x5D4037, roughness: 0.75 });
-    ropeMat = new THREE.MeshStandardMaterial({ color: 0xA1887F, roughness: 1 });
+    pm1 = new THREE.MeshStandardMaterial({ color: 0xB5794E, roughness: 0.6 });
+    pm2 = new THREE.MeshStandardMaterial({ color: 0xA06A3F, roughness: 0.65 });
+    beamMat = new THREE.MeshStandardMaterial({ color: 0x7A4B2A, roughness: 0.7 });
+    railMat = new THREE.MeshStandardMaterial({ color: 0x8B5E3C, roughness: 0.6 });
+    ropeMat = new THREE.MeshStandardMaterial({ color: 0xC49A6C, roughness: 0.9 });
 
     plankGeo = new THREE.BoxGeometry(cfg.BW, 0.18, cfg.PL - 0.06);
     beamGeo = new THREE.BoxGeometry(cfg.BW, 0.12, 0.12);
