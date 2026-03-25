@@ -93,47 +93,49 @@
     grassLight.position.set(0, -0.48, -cfg.DIST - 800);
     endGroup.add(grassLight);
 
-    // Rolling green hills around the farm
-    var farmHillColors = [0x4CAF50, 0x5CB85C, 0x45A045, 0x66BB6A];
-    var farmHills = [
-      { x: -60,  z: -cfg.DIST - 60,  r: 30, sy: 0.3 },
-      { x:  70,  z: -cfg.DIST - 80,  r: 35, sy: 0.28 },
-      { x: -30,  z: -cfg.DIST - 120, r: 40, sy: 0.32 },
-      { x:  100, z: -cfg.DIST - 100, r: 25, sy: 0.35 },
-      { x: -110, z: -cfg.DIST - 90,  r: 28, sy: 0.3 },
-      { x:  40,  z: -cfg.DIST - 140, r: 32, sy: 0.28 },
-    ];
-    for (var fhi = 0; fhi < farmHills.length; fhi++) {
-      var fh = farmHills[fhi];
-      var fhMesh = new THREE.Mesh(
-        new THREE.SphereGeometry(fh.r, 12, 8),
-        new THREE.MeshStandardMaterial({ color: farmHillColors[fhi % farmHillColors.length], roughness: 0.9 })
-      );
-      fhMesh.position.set(fh.x, -fh.r * 0.6, fh.z);
-      fhMesh.scale.y = fh.sy;
-      endGroup.add(fhMesh);
-    }
-
-    // ── Mountains (GLB terrain) ──
-    var terrainGlb = PONTE.models.get('terrain');
-    if (terrainGlb) {
-      var farmTerrains = [
-        { x: -200, z: -cfg.DIST - 150, s: 3,   ry: 0.2 },
-        { x:  200, z: -cfg.DIST - 160, s: 2.5, ry: Math.PI + 0.4 },
-        { x:    0, z: -cfg.DIST - 350, s: 3.5, ry: 0.8 },
-        { x: -210, z: -cfg.DIST - 280, s: 2.5, ry: -0.3 },
-        { x:  210, z: -cfg.DIST - 270, s: 3,   ry: Math.PI - 0.5 },
+    // Rolling green hills + mountains — skip in 2P for performance
+    var isIframe = PONTE.scene.isIframe;
+    if (!isIframe) {
+      var farmHillColors = [0x4CAF50, 0x5CB85C, 0x45A045, 0x66BB6A];
+      var farmHills = [
+        { x: -60,  z: -cfg.DIST - 60,  r: 30, sy: 0.3 },
+        { x:  70,  z: -cfg.DIST - 80,  r: 35, sy: 0.28 },
+        { x: -30,  z: -cfg.DIST - 120, r: 40, sy: 0.32 },
+        { x:  100, z: -cfg.DIST - 100, r: 25, sy: 0.35 },
+        { x: -110, z: -cfg.DIST - 90,  r: 28, sy: 0.3 },
+        { x:  40,  z: -cfg.DIST - 140, r: 32, sy: 0.28 },
       ];
-      for (var ti = 0; ti < farmTerrains.length; ti++) {
-        var tp = farmTerrains[ti];
-        var terrain = terrainGlb.scene.clone();
-        terrain.traverse(function(child) {
-          if (child.isMesh) { child.castShadow = false; child.receiveShadow = false; }
-        });
-        terrain.scale.set(tp.s, tp.s, tp.s);
-        terrain.position.set(tp.x, -15, tp.z);
-        terrain.rotation.y = tp.ry;
-        endGroup.add(terrain);
+      for (var fhi = 0; fhi < farmHills.length; fhi++) {
+        var fh = farmHills[fhi];
+        var fhMesh = new THREE.Mesh(
+          new THREE.SphereGeometry(fh.r, 12, 8),
+          new THREE.MeshStandardMaterial({ color: farmHillColors[fhi % farmHillColors.length], roughness: 0.9 })
+        );
+        fhMesh.position.set(fh.x, -fh.r * 0.6, fh.z);
+        fhMesh.scale.y = fh.sy;
+        endGroup.add(fhMesh);
+      }
+
+      var terrainGlb = PONTE.models.get('terrain');
+      if (terrainGlb) {
+        var farmTerrains = [
+          { x: -200, z: -cfg.DIST - 150, s: 3,   ry: 0.2 },
+          { x:  200, z: -cfg.DIST - 160, s: 2.5, ry: Math.PI + 0.4 },
+          { x:    0, z: -cfg.DIST - 350, s: 3.5, ry: 0.8 },
+          { x: -210, z: -cfg.DIST - 280, s: 2.5, ry: -0.3 },
+          { x:  210, z: -cfg.DIST - 270, s: 3,   ry: Math.PI - 0.5 },
+        ];
+        for (var ti = 0; ti < farmTerrains.length; ti++) {
+          var tp = farmTerrains[ti];
+          var terrain = terrainGlb.scene.clone();
+          terrain.traverse(function(child) {
+            if (child.isMesh) { child.castShadow = false; child.receiveShadow = false; }
+          });
+          terrain.scale.set(tp.s, tp.s, tp.s);
+          terrain.position.set(tp.x, -15, tp.z);
+          terrain.rotation.y = tp.ry;
+          endGroup.add(terrain);
+        }
       }
     }
 

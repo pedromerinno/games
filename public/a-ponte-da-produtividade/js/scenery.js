@@ -38,18 +38,21 @@
     }
 
     // ── Crop plants ──
+    var isIframe = PONTE.scene.isIframe;
+    var MatType = isIframe ? THREE.MeshLambertMaterial : THREE.MeshStandardMaterial;
     var cropColors = [0x4CAF50, 0x66BB6A, 0x388E3C, 0x7CB342, 0x558B2F];
     var cropMats = cropColors.map(function(c) {
-      return new THREE.MeshStandardMaterial({ color: c, roughness: 0.8 });
+      return new MatType({ color: c });
     });
-    var stemMat = new THREE.MeshStandardMaterial({ color: 0x33691E, roughness: 0.9 });
-    var leafGeo = new THREE.SphereGeometry(0.5, 5, 4);
-    var stemGeo = new THREE.CylinderGeometry(0.04, 0.06, 1, 4);
+    var stemMat = new MatType({ color: 0x33691E });
+    var leafSeg = isIframe ? 3 : 5;
+    var leafGeo = new THREE.SphereGeometry(0.5, leafSeg, leafSeg - 1);
+    var stemGeo = new THREE.CylinderGeometry(0.04, 0.06, 1, isIframe ? 3 : 4);
 
     var plantSpacing = 3.5;
     var numPlants = Math.ceil(plantEnd / plantSpacing);
-    var fruitMat = new THREE.MeshStandardMaterial({ color: 0xFFEB3B, roughness: 0.5 });
-    var fruitGeo = new THREE.SphereGeometry(0.25, 5, 4);
+    var fruitMat = new MatType({ color: 0xFFEB3B });
+    var fruitGeo = new THREE.SphereGeometry(0.25, leafSeg, leafSeg - 1);
 
     crops = [];
     for (var side = -1; side <= 1; side += 2) {
@@ -108,64 +111,72 @@
     }
 
     // ── Rolling hills (soft green mounds) ──
+    var isIframe = PONTE.scene.isIframe;
     var hillColors = [0x5CB85C, 0x6EC46E, 0x4CAF50, 0x7BC67B, 0x45A045];
-    for (var i = 0; i < 12; i++) {
+    var numHills = isIframe ? 6 : 12;
+    for (var i = 0; i < numHills; i++) {
       var hside = i % 2 === 0 ? 1 : -1;
       var r = 18 + Math.random() * 25;
       var hMat = new THREE.MeshStandardMaterial({ color: hillColors[i % hillColors.length], roughness: 0.9 });
-      var hill = new THREE.Mesh(new THREE.SphereGeometry(r, 12, 8), hMat);
+      var hill = new THREE.Mesh(new THREE.SphereGeometry(r, isIframe ? 8 : 12, isIframe ? 6 : 8), hMat);
       hill.position.set(hside * (40 + Math.random() * 35), -r * 0.6, -(Math.random() * DIST));
       hill.scale.y = 0.3 + Math.random() * 0.12;
       scene.add(hill);
     }
 
-    // ── Background mountains (GLB terrain) ──
-    var terrainGlb = PONTE.models.get('terrain');
-    if (terrainGlb) {
-      var terrainPositions = [
-        { x: -200, z: -DIST * 0.15, s: 3,   ry: 0 },
-        { x:  200, z: -DIST * 0.2,  s: 2.5, ry: Math.PI },
-        { x: -220, z: -DIST * 0.45, s: 3.5, ry: 0.4 },
-        { x:  210, z: -DIST * 0.5,  s: 2.5, ry: Math.PI + 0.3 },
-        { x: -190, z: -DIST * 0.75, s: 3,   ry: -0.3 },
-        { x:  195, z: -DIST * 0.8,  s: 2.5, ry: Math.PI - 0.2 },
-      ];
-      for (var ti = 0; ti < terrainPositions.length; ti++) {
-        var tp = terrainPositions[ti];
-        var terrain = terrainGlb.scene.clone();
-        terrain.traverse(function(child) {
-          if (child.isMesh) { child.castShadow = false; child.receiveShadow = false; }
-        });
-        terrain.scale.set(tp.s, tp.s, tp.s);
-        terrain.position.set(tp.x, -15, tp.z);
-        terrain.rotation.y = tp.ry;
-        scene.add(terrain);
+    // ── Background mountains (GLB terrain) — skip in 2P mode ──
+    if (!isIframe) {
+      var terrainGlb = PONTE.models.get('terrain');
+      if (terrainGlb) {
+        var terrainPositions = [
+          { x: -200, z: -DIST * 0.15, s: 3,   ry: 0 },
+          { x:  200, z: -DIST * 0.2,  s: 2.5, ry: Math.PI },
+          { x: -220, z: -DIST * 0.45, s: 3.5, ry: 0.4 },
+          { x:  210, z: -DIST * 0.5,  s: 2.5, ry: Math.PI + 0.3 },
+          { x: -190, z: -DIST * 0.75, s: 3,   ry: -0.3 },
+          { x:  195, z: -DIST * 0.8,  s: 2.5, ry: Math.PI - 0.2 },
+        ];
+        for (var ti = 0; ti < terrainPositions.length; ti++) {
+          var tp = terrainPositions[ti];
+          var terrain = terrainGlb.scene.clone();
+          terrain.traverse(function(child) {
+            if (child.isMesh) { child.castShadow = false; child.receiveShadow = false; }
+          });
+          terrain.scale.set(tp.s, tp.s, tp.s);
+          terrain.position.set(tp.x, -15, tp.z);
+          terrain.rotation.y = tp.ry;
+          scene.add(terrain);
+        }
       }
     }
 
-    // ── Clouds ──
-    var cloudMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 1 });
-    for (var i = 0; i < 8; i++) {
-      var cloud = new THREE.Group();
-      var np = 3 + Math.floor(Math.random() * 4);
-      for (var p = 0; p < np; p++) {
-        var pr = 1.5 + Math.random() * 2.5;
-        var puff = new THREE.Mesh(new THREE.SphereGeometry(pr, 8, 6), cloudMat);
-        puff.position.set(p * pr * 0.9, (Math.random() - 0.5) * pr * 0.3, (Math.random() - 0.5) * pr * 0.4);
-        puff.scale.y = 0.35;
-        cloud.add(puff);
+    // ── Clouds — skip in 2P mode ──
+    if (!isIframe) {
+      var cloudMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 1 });
+      for (var i = 0; i < 8; i++) {
+        var cloud = new THREE.Group();
+        var np = 3 + Math.floor(Math.random() * 4);
+        for (var p = 0; p < np; p++) {
+          var pr = 1.5 + Math.random() * 2.5;
+          var puff = new THREE.Mesh(new THREE.SphereGeometry(pr, 8, 6), cloudMat);
+          puff.position.set(p * pr * 0.9, (Math.random() - 0.5) * pr * 0.3, (Math.random() - 0.5) * pr * 0.4);
+          puff.scale.y = 0.35;
+          cloud.add(puff);
+        }
+        cloud.position.set((Math.random() - 0.5) * 140, 22 + Math.random() * 15, -Math.random() * DIST);
+        scene.add(cloud);
       }
-      cloud.position.set((Math.random() - 0.5) * 140, 22 + Math.random() * 15, -Math.random() * DIST);
-      scene.add(cloud);
     }
 
-    // ── Sun ──
-    var sunSphere = new THREE.Mesh(
-      new THREE.SphereGeometry(6, 16, 12),
-      new THREE.MeshBasicMaterial({ color: 0xFFF9C4 })
-    );
-    sunSphere.position.set(50, 45, -DIST * 0.4);
-    scene.add(sunSphere);
+    // ── Sun — skip in 2P mode ──
+    if (!isIframe) {
+      var sunSphere = new THREE.Mesh(
+        new THREE.SphereGeometry(6, 16, 12),
+        new THREE.MeshBasicMaterial({ color: 0xFFF9C4 })
+      );
+      sunSphere.position.set(50, 45, -DIST * 0.4);
+      scene.add(sunSphere);
+    }
   }
 
   function update(playerProgress) {

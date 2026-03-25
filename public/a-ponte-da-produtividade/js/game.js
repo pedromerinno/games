@@ -393,8 +393,14 @@
   }
 
   // ---- Main loop ----
-  function loop() {
+  var _lastFrame = 0;
+  var _frameInterval = PONTE._iframePlayer ? 1000 / 30 : 0; // 30fps cap in 2P
+
+  function loop(now) {
     requestAnimationFrame(loop);
+    if (_frameInterval && now - _lastFrame < _frameInterval) return;
+    _lastFrame = now;
+
     var cfg = PONTE.config;
     var scene = PONTE.scene.scene;
     var camera = PONTE.scene.camera;

@@ -6,13 +6,15 @@
   function init() {
     _scene = new THREE.Scene();
     _scene.background = new THREE.Color(0x7EC8E3);
-    _scene.fog = new THREE.Fog(0x7EC8E3, 80, 500);
+    _scene.fog = new THREE.Fog(0x7EC8E3, isIframe ? 50 : 80, isIframe ? 250 : 500);
+
+    var isIframe = !!new URLSearchParams(window.location.search).get('player');
 
     _camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 800);
-    _renderer = new THREE.WebGLRenderer({ antialias: true });
+    _renderer = new THREE.WebGLRenderer({ antialias: !isIframe });
     _renderer.setSize(window.innerWidth, window.innerHeight);
-    _renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    _renderer.shadowMap.enabled = true;
+    _renderer.setPixelRatio(isIframe ? 1 : Math.min(window.devicePixelRatio, 2));
+    _renderer.shadowMap.enabled = !isIframe;
     _renderer.shadowMap.type = THREE.BasicShadowMap;
     document.body.prepend(_renderer.domElement);
     _clock = new THREE.Clock();
@@ -39,20 +41,27 @@
 
     // Water
     var wGeo = new THREE.PlaneGeometry(500, 3000);
-    var wMat = new THREE.MeshStandardMaterial({ color: 0x1976D2, roughness: 0.05, metalness: 0.1, transparent: true, opacity: 0.88 });
-    var water = new THREE.Mesh(wGeo, wMat);
-    water.rotation.x = -Math.PI / 2;
-    water.position.set(0, -3, -1200);
-    water.receiveShadow = true;
-    _scene.add(water);
+    if (isIframe) {
+      var water = new THREE.Mesh(wGeo, new THREE.MeshBasicMaterial({ color: 0x1976D2 }));
+      water.rotation.x = -Math.PI / 2;
+      water.position.set(0, -3, -1200);
+      _scene.add(water);
+    } else {
+      var wMat = new THREE.MeshStandardMaterial({ color: 0x1976D2, roughness: 0.05, metalness: 0.1, transparent: true, opacity: 0.88 });
+      var water = new THREE.Mesh(wGeo, wMat);
+      water.rotation.x = -Math.PI / 2;
+      water.position.set(0, -3, -1200);
+      water.receiveShadow = true;
+      _scene.add(water);
 
-    var w2 = new THREE.Mesh(
-      new THREE.PlaneGeometry(500, 3000),
-      new THREE.MeshBasicMaterial({ color: 0x64B5F6, transparent: true, opacity: 0.12 })
-    );
-    w2.rotation.x = -Math.PI / 2;
-    w2.position.set(0, -2.8, -1200);
-    _scene.add(w2);
+      var w2 = new THREE.Mesh(
+        new THREE.PlaneGeometry(500, 3000),
+        new THREE.MeshBasicMaterial({ color: 0x64B5F6, transparent: true, opacity: 0.12 })
+      );
+      w2.rotation.x = -Math.PI / 2;
+      w2.position.set(0, -2.8, -1200);
+      _scene.add(w2);
+    }
 
     window.addEventListener('resize', onResize);
 
@@ -60,6 +69,7 @@
     PONTE.scene.camera = _camera;
     PONTE.scene.renderer = _renderer;
     PONTE.scene.clock = _clock;
+    PONTE.scene.isIframe = isIframe;
   }
 
   function onResize() {
